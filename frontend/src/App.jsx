@@ -6,8 +6,8 @@ import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 
 const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  const userId = localStorage.getItem('userId');
+  return userId ? children : <Navigate to="/login" />;
 };
 
 function App() {

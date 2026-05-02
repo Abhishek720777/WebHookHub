@@ -4,9 +4,13 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts';
 import { Activity, CheckCircle, XCircle, BarChart3, Clock, RefreshCw } from 'lucide-react';
+import api from '../api';
 import '../styles/analytics.css';
 
 const COLORS = ['#5C7A60', '#C4562B', '#1A120B', '#E07A52', '#3D2E1A'];
+
+// Helper to handle both camelCase and UPPERCASE keys from different DB drivers
+const getVal = (obj, key) => obj[key.toLowerCase()] || obj[key.toUpperCase()] || 0;
 
 const AnalyticsView = () => {
   const [data, setData] = useState(null);
@@ -19,14 +23,8 @@ const AnalyticsView = () => {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/analytics', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch analytics');
-      const result = await response.json();
-      setData(result);
+      const response = await api.get('/analytics');
+      setData(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setData(null);
@@ -48,19 +46,22 @@ const AnalyticsView = () => {
     </div>
   );
 
-  const statusData = (data.statusDistribution || []).map(item => ({
-    name: item.status === 'SUCCESS' ? 'Successful' : 'Failed',
-    value: Number(item.count)
-  }));
+  const statusData = (data.statusDistribution || []).map(item => {
+    const status = (item.status || item.STATUS || '').toUpperCase();
+    return {
+      name: status === 'SUCCESS' ? 'Successful' : 'Failed',
+      value: Number(item.count || item.COUNT || 0)
+    };
+  });
 
   const endpointData = (data.endpointDistribution || []).map(item => ({
-    name: item.path || 'default',
-    count: Number(item.count)
+    name: item.path || item.PATH || 'default',
+    count: Number(item.count || item.COUNT || 0)
   }));
 
   const timeData = (data.timeSeriesData || []).map(item => ({
-    time: item.time ? new Date(item.time).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }) : '?',
-    count: Number(item.count)
+    time: (item.time || item.TIME) ? new Date(item.time || item.TIME).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }) : '?',
+    count: Number(item.count || item.COUNT || 0)
   }));
 
   return (
@@ -109,7 +110,7 @@ const AnalyticsView = () => {
         <div className="chart-card large glass-panel">
           <h3><Activity size={16} /> Data Flow Velocity</h3>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={timeData}>
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -132,7 +133,7 @@ const AnalyticsView = () => {
         <div className="chart-card glass-panel">
           <h3><BarChart3 size={16} /> Top Endpoints</h3>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={240}>
               <BarChart data={endpointData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                 <XAxis type="number" hide />
@@ -149,7 +150,7 @@ const AnalyticsView = () => {
         <div className="chart-card glass-panel">
           <h3><Activity size={16} /> Resolution Ratio</h3>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
                   data={statusData}

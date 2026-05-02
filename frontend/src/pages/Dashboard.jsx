@@ -48,6 +48,7 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const res = await api.get('/events');
+      console.log('Fetched events:', res.data.length);
       setEvents(res.data);
       if (res.data.length > 0 && !selectedEvent) {
         setSelectedEvent(res.data[0]);
@@ -67,19 +68,19 @@ const Dashboard = () => {
       await fetchEvents();
 
       if (currentUser?.id) {
-        const socket = new SockJS('http://localhost:8080/ws');
+        const socket = new SockJS('http://localhost:8080/ws', null, { withCredentials: true });
         stompClient = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,
-          connectHeaders: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
           onConnect: () => {
             console.log('Connected to WebSocket!');
             stompClient.subscribe(`/topic/events/${currentUser.id}`, (message) => {
               if (message.body) {
                 const newEvent = JSON.parse(message.body);
-                setEvents(prev => [newEvent, ...prev]);
+                setEvents(prev => {
+                  if (prev.find(e => e.id === newEvent.id)) return prev;
+                  return [newEvent, ...prev];
+                });
               }
             });
           }
@@ -95,8 +96,10 @@ const Dashboard = () => {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {}
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
     navigate('/login');

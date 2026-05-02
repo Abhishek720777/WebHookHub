@@ -2,7 +2,6 @@ package com.webhookhub.backend.service;
 
 import com.webhookhub.backend.entity.User;
 import com.webhookhub.backend.entity.WebhookEvent;
-import com.webhookhub.backend.repository.UserRepository;
 import com.webhookhub.backend.repository.WebhookEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
@@ -20,7 +19,7 @@ import java.util.Map;
 public class WebhookService {
 
     private final WebhookEventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -34,7 +33,7 @@ public class WebhookService {
         event.setHeaders(headers.toString());
         event.setPayload(payload);
 
-        User user = userRepository.findById(userId).orElse(null);
+        User user = userService.getUserById(userId);
         if (user == null) {
             event.setStatus("FAILED");
             event.setErrorMessage("User not found");
@@ -50,8 +49,8 @@ public class WebhookService {
         WebhookEvent original = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        User user = userRepository.findById(original.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.getUserById(original.getUserId());
+        if (user == null) throw new RuntimeException("User not found");
 
         WebhookEvent newEvent = new WebhookEvent();
         newEvent.setUserId(original.getUserId());

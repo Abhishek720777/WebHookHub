@@ -365,6 +365,7 @@
   border: 1px solid transparent;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .event-card:hover {

@@ -4,6 +4,7 @@ import com.webhookhub.backend.entity.User;
 import com.webhookhub.backend.entity.WebhookEvent;
 import com.webhookhub.backend.repository.UserRepository;
 import com.webhookhub.backend.repository.WebhookEventRepository;
+import com.webhookhub.backend.service.UserService;
 import com.webhookhub.backend.service.WebhookService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,8 @@ public class WebhookController {
 
     private final WebhookService webhookService;
     private final WebhookEventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final UserRepository userRepository; // Keep for findByUsername
 
     @RequestMapping(value = "/webhook/{userId}/**", method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, HttpServletRequest request) throws IOException {
@@ -65,7 +67,7 @@ public class WebhookController {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username).orElseThrow();
         user.setForwardUrl(payload.get("forwardUrl"));
-        userRepository.save(user);
+        userService.saveUser(user);
         return ResponseEntity.ok("Forward URL updated");
     }
     

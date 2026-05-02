@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const USER_ID = 4;
+const USER_ID = 7;
 const BASE_URL = `http://localhost:8080/webhook/${USER_ID}`;
 
 const payloads = [

@@ -29,7 +29,7 @@ class WebhookServiceTest {
     private WebhookEventRepository eventRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
@@ -40,7 +40,7 @@ class WebhookServiceTest {
 
     @BeforeEach
     void setUp() {
-        webhookService = new WebhookService(eventRepository, userRepository, messagingTemplate);
+        webhookService = new WebhookService(eventRepository, userService, messagingTemplate);
 
         testUser = new User();
         testUser.setId(1L);
@@ -55,7 +55,7 @@ class WebhookServiceTest {
     @DisplayName("Should log event as SUCCESS when no forward URL is configured")
     void shouldLogSuccessWhenNoForwardUrl() {
         // Arrange
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userService.getUserById(1L)).thenReturn(testUser);
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
@@ -73,7 +73,7 @@ class WebhookServiceTest {
     @DisplayName("Should set status FAILED and save event when user is not found")
     void shouldFailWhenUserNotFound() {
         // Arrange
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userService.getUserById(99L)).thenReturn(null);
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
@@ -90,7 +90,7 @@ class WebhookServiceTest {
     @DisplayName("Should store the correct endpointPath on the event")
     void shouldStoreCustomEndpointPath() {
         // Arrange
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userService.getUserById(1L)).thenReturn(testUser);
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
@@ -106,7 +106,7 @@ class WebhookServiceTest {
     @DisplayName("Should broadcast via WebSocket after logging a successful event")
     void shouldBroadcastViaWebSocketAfterSuccess() {
         // Arrange
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userService.getUserById(1L)).thenReturn(testUser);
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
@@ -123,7 +123,7 @@ class WebhookServiceTest {
     void shouldFailWhenForwardUrlIsUnreachable() {
         // Arrange
         testUser.setForwardUrl("http://localhost:9999/nonexistent"); // Nothing is listening here
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userService.getUserById(1L)).thenReturn(testUser);
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
@@ -160,7 +160,7 @@ class WebhookServiceTest {
         existing.setHeaders("{}");
 
         when(eventRepository.findById(5L)).thenReturn(Optional.of(existing));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userService.getUserById(1L)).thenReturn(testUser);
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act

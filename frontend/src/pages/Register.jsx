@@ -31,7 +31,6 @@ const Register = () => {
     setError('');
     try {
       const res = await api.post('/auth/register', formData);
-      localStorage.setItem('token', res.data.token);
       localStorage.setItem('userId', res.data.userId);
       navigate('/dashboard');
     } catch (err) {

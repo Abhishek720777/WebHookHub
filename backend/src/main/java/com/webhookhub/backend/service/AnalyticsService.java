@@ -15,6 +15,7 @@ public class AnalyticsService {
     private final WebhookEventRepository eventRepository;
 
     public AnalyticsResponse getAnalytics(Long userId) {
+        System.out.println("DEBUG: Fetching analytics for User ID: " + userId);
         List<Map<String, Object>> statusDist = eventRepository.countByStatus(userId);
         List<Map<String, Object>> endpointDist = eventRepository.countByEndpoint(userId);
         List<Map<String, Object>> timeSeries = eventRepository.countByTime(userId);
