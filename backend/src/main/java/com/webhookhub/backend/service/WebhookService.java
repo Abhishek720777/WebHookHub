@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,12 +21,14 @@ public class WebhookService {
 
     private final WebhookEventRepository eventRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public WebhookEvent processIncomingWebhook(Long userId, String method, Map<String, String> headers,
+    public WebhookEvent processIncomingWebhook(Long userId, String endpointPath, String method, Map<String, String> headers,
             String payload) {
         WebhookEvent event = new WebhookEvent();
         event.setUserId(userId);
+        event.setEndpointPath(endpointPath);
         event.setMethod(method);
         event.setHeaders(headers.toString());
         event.setPayload(payload);
@@ -34,7 +37,9 @@ public class WebhookService {
         if (user == null) {
             event.setStatus("FAILED");
             event.setErrorMessage("User not found");
-            return eventRepository.save(event);
+            WebhookEvent saved = eventRepository.save(event);
+            messagingTemplate.convertAndSend("/topic/events/" + userId, saved);
+            return saved;
         }
 
         return executeForwarding(event, user.getForwardUrl());
@@ -81,6 +86,10 @@ public class WebhookService {
             event.setErrorMessage(e.getMessage());
         }
 
-        return eventRepository.save(event);
+        WebhookEvent savedEvent = eventRepository.save(event);
+        // Broadcast the event to any connected WebSocket clients
+        messagingTemplate.convertAndSend("/topic/events/" + event.getUserId(), savedEvent);
+        
+        return savedEvent;
     }
 }

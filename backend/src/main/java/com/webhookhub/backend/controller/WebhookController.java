@@ -26,8 +26,8 @@ public class WebhookController {
     private final WebhookEventRepository eventRepository;
     private final UserRepository userRepository;
 
-    @RequestMapping(value = "/webhook/{userId}", method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
-    public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, HttpServletRequest request) throws IOException {
+    @RequestMapping(value = {"/webhook/{userId}", "/webhook/{userId}/{endpointPath}"}, method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, @PathVariable(required = false) String endpointPath, HttpServletRequest request) throws IOException {
         String method = request.getMethod();
         
         Map<String, String> headersMap = new HashMap<>();
@@ -39,7 +39,10 @@ public class WebhookController {
 
         String payload = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 
-        WebhookEvent event = webhookService.processIncomingWebhook(userId, method, headersMap, payload);
+        // If endpointPath is null, default to "default"
+        String path = (endpointPath != null && !endpointPath.isEmpty()) ? endpointPath : "default";
+
+        WebhookEvent event = webhookService.processIncomingWebhook(userId, path, method, headersMap, payload);
         return ResponseEntity.ok(event);
     }
 

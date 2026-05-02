@@ -17,6 +17,9 @@ public class WebhookEvent {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "endpoint_path")
+    private String endpointPath;
+
     @Column(nullable = false)
     private String method;
 
