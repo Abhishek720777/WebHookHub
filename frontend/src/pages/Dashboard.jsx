@@ -7,6 +7,8 @@ import { Webhook, LogOut, RefreshCw, Server, Send, AlertCircle, CheckCircle2, Se
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import JsonViewer from '../components/JsonViewer';
+import AnalyticsView from '../components/AnalyticsView';
+import { LayoutDashboard, BarChart2 } from 'lucide-react';
 
 const Dashboard = () => {
   const [events, setEvents] = useState([]);
@@ -21,6 +23,9 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [methodFilter, setMethodFilter] = useState('ALL');
+
+  // UI State
+  const [activeTab, setActiveTab] = useState('events'); // 'events' or 'analytics'
 
   const navigate = useNavigate();
 
@@ -187,6 +192,21 @@ const Dashboard = () => {
           </button>
         </div>
 
+        <nav className="sidebar-nav">
+          <button 
+            className={`nav-item ${activeTab === 'events' ? 'active' : ''}`}
+            onClick={() => setActiveTab('events')}
+          >
+            <LayoutDashboard size={18} /> Live Events
+          </button>
+          <button 
+            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <BarChart2 size={18} /> Analytics
+          </button>
+        </nav>
+
         <div className="spacer"></div>
 
         <button className="logout-btn" onClick={handleLogout}>
@@ -196,7 +216,7 @@ const Dashboard = () => {
 
       <main className="dashboard-main">
         <header className="main-header glass-panel">
-          <h1>Events Log</h1>
+          <h1>{activeTab === 'events' ? 'Events Log' : 'Analytics Dashboard'}</h1>
           <div className="header-actions">
             <span className="live-indicator"><span className="dot"></span> Live Updates Active</span>
             <button className="refresh-btn" onClick={fetchEvents}>
@@ -205,123 +225,125 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Filter Bar */}
-        <div className="filter-bar glass-panel">
-          <div className="search-input-wrapper">
-            <Search size={16} />
-            <input
-              type="text"
-              placeholder="Search payload or endpoint..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="filter-selects">
-            <div className="select-wrapper">
-              <Filter size={14} />
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                <option value="ALL">All Status</option>
-                <option value="SUCCESS">Success</option>
-                <option value="FAILED">Failed</option>
-              </select>
-            </div>
-            <div className="select-wrapper">
-              <Filter size={14} />
-              <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)}>
-                <option value="ALL">All Methods</option>
-                <option value="POST">POST</option>
-                <option value="GET">GET</option>
-                <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="content-split">
-          <div className="events-list glass-panel custom-scrollbar">
-            {loading && events.length === 0 ? (
-              <div className="empty-state">Loading events...</div>
-            ) : filteredEvents.length === 0 ? (
-              <div className="empty-state">
-                <Server size={48} opacity={0.5} />
-                <p>No webhooks found.</p>
+        {activeTab === 'events' ? (
+          <>
+            {/* Filter Bar */}
+            <div className="filter-bar glass-panel">
+              <div className="search-input-wrapper">
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder="Search payload or endpoint..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
               </div>
-            ) : (
-              filteredEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className={`event-card ${selectedEvent?.id === event.id ? 'active' : ''}`}
-                  onClick={() => setSelectedEvent(event)}
-                >
-                  <div className="event-card-header">
-                    <span className={`method badge-${event.method.toLowerCase()}`}>{event.method}</span>
-                    <span className="time">{new Date(event.createdAt).toLocaleTimeString()}</span>
-                  </div>
-                  <div className="event-card-body">
-                    <span className={`status-icon ${event.status === 'SUCCESS' ? 'success' : 'error'}`}>
-                      {event.status === 'SUCCESS' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-                    </span>
-                    <span className="status-text">{event.endpointPath ? `/${event.endpointPath}` : '/default'}</span>
-                  </div>
+              <div className="filter-selects">
+                <div className="select-wrapper">
+                  <Filter size={14} />
+                  <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <option value="ALL">All Status</option>
+                    <option value="SUCCESS">Success</option>
+                    <option value="FAILED">Failed</option>
+                  </select>
                 </div>
-              ))
-            )}
-          </div>
-
-          <div className="event-detail glass-panel custom-scrollbar">
-            {selectedEvent ? (
-              <div className="detail-content fade-in">
-                <div className="detail-header">
-                  <div className="detail-title">
-                    <span className={`method badge-${selectedEvent.method.toLowerCase()}`}>{selectedEvent.method}</span>
-                    <h3>{selectedEvent.endpointPath ? `/${selectedEvent.endpointPath}` : '/default'}</h3>
-                  </div>
-                  <button
-                    className="replay-btn"
-                    onClick={() => handleReplay(selectedEvent.id)}
-                    disabled={replaying}
-                  >
-                    <Send size={16} /> {replaying ? 'Replaying...' : 'Replay'}
-                  </button>
+                <div className="select-wrapper">
+                  <Filter size={14} />
+                  <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)}>
+                    <option value="ALL">All Methods</option>
+                    <option value="POST">POST</option>
+                    <option value="GET">GET</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                  </select>
                 </div>
+              </div>
+            </div>
 
-                {selectedEvent.errorMessage && (
-                  <div className={`detail-error ${selectedEvent.status === 'SUCCESS' ? 'info' : ''}`}>
-                    {selectedEvent.status === 'SUCCESS' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-                    <div>
-                      <strong>{selectedEvent.status === 'SUCCESS' ? 'Log Status' : 'Delivery Failed'}</strong>
-                      <p>{selectedEvent.errorMessage}</p>
+            <div className="content-split">
+              <div className="events-list glass-panel custom-scrollbar">
+                {loading && events.length === 0 ? (
+                  <div className="empty-state">Loading events...</div>
+                ) : filteredEvents.length === 0 ? (
+                  <div className="empty-state">
+                    <Server size={48} opacity={0.5} />
+                    <p>No webhooks found.</p>
+                  </div>
+                ) : (
+                  filteredEvents.map(event => (
+                    <div
+                      key={event.id}
+                      className={`event-item ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <div className="event-item-main">
+                        <span className={`method-badge ${event.method.toLowerCase()}`}>{event.method}</span>
+                        <span className="event-path">/{event.endpointPath}</span>
+                        <span className={`status-icon ${event.status.toLowerCase()}`}>
+                          {event.status === 'SUCCESS' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                        </span>
+                      </div>
+                      <div className="event-item-sub">
+                        <span>{new Date(event.createdAt).toLocaleTimeString()}</span>
+                        {event.errorMessage && <span className="error-hint">!</span>}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="event-detail glass-panel">
+                {selectedEvent ? (
+                  <div className="detail-content custom-scrollbar">
+                    <div className="detail-header">
+                      <div className="detail-title">
+                        <span className={`method-badge large ${selectedEvent.method.toLowerCase()}`}>{selectedEvent.method}</span>
+                        <h3>/{selectedEvent.endpointPath}</h3>
+                      </div>
+                      <div className="detail-actions">
+                        <button className="replay-btn" onClick={() => handleReplay(selectedEvent.id)} disabled={replaying}>
+                          <Send size={16} className={replaying ? 'sending' : ''} /> {replaying ? 'Replaying...' : 'Replay'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {selectedEvent.errorMessage && (
+                      <div className="error-banner">
+                        <AlertCircle size={16} />
+                        <span>{selectedEvent.errorMessage}</span>
+                      </div>
+                    )}
+
+                    <div className="detail-section">
+                      <h4>Headers</h4>
+                      <div className="code-block">
+                        {renderHeaders(selectedEvent.headers)}
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4>Payload</h4>
+                      <div className="json-viewer-wrapper code-block">
+                        {renderPayload(selectedEvent.payload)}
+                      </div>
+                    </div>
+
+                    <div className="detail-meta">
+                      <span>Received at: {new Date(selectedEvent.createdAt).toLocaleString()}</span>
+                      <span>ID: {selectedEvent.id}</span>
                     </div>
                   </div>
+                ) : (
+                  <div className="empty-state">
+                    <p>Select an event to view details</p>
+                  </div>
                 )}
-
-                <div className="detail-section">
-                  <h4>Headers</h4>
-                  <div className="code-block">
-                    {renderHeaders(selectedEvent.headers)}
-                  </div>
-                </div>
-
-                <div className="detail-section">
-                  <h4>Payload</h4>
-                  <div className="json-viewer-wrapper code-block">
-                    {renderPayload(selectedEvent.payload)}
-                  </div>
-                </div>
-
-                <div className="detail-meta">
-                  <span>Received at: {new Date(selectedEvent.createdAt).toLocaleString()}</span>
-                  <span>ID: {selectedEvent.id}</span>
-                </div>
               </div>
-            ) : (
-              <div className="empty-state">
-                <p>Select an event to view details</p>
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        ) : (
+          <AnalyticsView />
+        )}
       </main>
     </div>
   );
