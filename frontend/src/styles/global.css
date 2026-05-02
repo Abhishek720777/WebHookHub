@@ -1,0 +1,34 @@
+:root {
+  --cream:   #F5EDE0;
+  --cream-2: #EDE2D3;
+  --ink:     #1A120B;
+  --ink-2:   #3D2E1A;
+  --rust:    #C4562B;
+  --rust-l:  #E07A52;
+  --muted:   #6B5A4A;
+  --border:  #D9CDBC;
+  --sage:    #5C7A60;
+  --white:   #FBF7F2;
+  
+  --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,700&family=DM+Mono:wght@300;400;500&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  background-color: var(--cream);
+  color: var(--ink);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Fraunces', serif;
+}
+
+.font-mono {
+  font-family: 'DM Mono', monospace;
+}

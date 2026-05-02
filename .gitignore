@@ -1,0 +1,48 @@
+# System Files
+.DS_Store
+Thumbs.db
+*.swp
+*.log
+.env
+.env.local
+.env.*.local
+
+# Node.js
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Java / Maven
+backend/target/
+backend/.mvn/
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/.env
+
+# IDE - VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# IDE - Eclipse
+.settings/
+.project
+.classpath
+.factorypath
+
+# Testing
+frontend/coverage/
+backend/test-output/

@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../styles/dashboard.css';
-import '../styles/advanced.css';
-import { Webhook, LogOut, RefreshCw, Server, Send, AlertCircle, CheckCircle2, Search, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Webhook, LogOut, RefreshCw, Server, Send, 
+  AlertCircle, CheckCircle2, Search, Filter,
+  LayoutDashboard, BarChart2, Copy, Terminal
+} from 'lucide-react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import JsonViewer from '../components/JsonViewer';
 import AnalyticsView from '../components/AnalyticsView';
-import { LayoutDashboard, BarChart2 } from 'lucide-react';
 
 const Dashboard = () => {
   const [events, setEvents] = useState([]);
@@ -42,6 +45,7 @@ const Dashboard = () => {
   };
 
   const fetchEvents = async () => {
+    setLoading(true);
     try {
       const res = await api.get('/events');
       setEvents(res.data);
@@ -78,10 +82,6 @@ const Dashboard = () => {
                 setEvents(prev => [newEvent, ...prev]);
               }
             });
-          },
-          onStompError: (frame) => {
-            console.error('Broker reported error: ' + frame.headers['message']);
-            console.error('Additional details: ' + frame.body);
           }
         });
         stompClient.activate();
@@ -91,9 +91,7 @@ const Dashboard = () => {
     initialize();
 
     return () => {
-      if (stompClient) {
-        stompClient.deactivate();
-      }
+      if (stompClient) stompClient.deactivate();
     };
   }, []);
 
@@ -128,26 +126,28 @@ const Dashboard = () => {
     }
   };
 
-  const renderPayload = (payload) => {
-    return <JsonViewer src={payload} raw={payload} />;
-  };
-
   const renderHeaders = (headersStr) => {
-    if (headersStr.startsWith('{') && headersStr.endsWith('}')) {
-      const content = headersStr.slice(1, -1);
-      const pairs = content.split(', ').map(p => p.split('='));
-      return (
-        <div className="headers-grid">
-          {pairs.map(([k, v], idx) => (
-            <div key={idx} className="header-row">
-              <span className="header-key">{k}</span>
-              <span className="header-value">{v}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return <pre>{headersStr}</pre>;
+    if (!headersStr) return null;
+    try {
+      if (headersStr.startsWith('{') && headersStr.endsWith('}')) {
+        const content = headersStr.slice(1, -1);
+        const pairs = content.split(', ').map(p => {
+          const idx = p.indexOf('=');
+          return [p.slice(0, idx), p.slice(idx + 1)];
+        });
+        return (
+          <div className="header-grid">
+            {pairs.map(([k, v], idx) => (
+              <React.Fragment key={idx}>
+                <div className="header-key">{k}</div>
+                <div className="header-val">{v}</div>
+              </React.Fragment>
+            ))}
+          </div>
+        );
+      }
+    } catch (e) {}
+    return <pre className="font-mono" style={{ fontSize: '0.7rem' }}>{headersStr}</pre>;
   };
 
   // Filter Logic
@@ -169,8 +169,8 @@ const Dashboard = () => {
 
       <aside className="sidebar glass-panel">
         <div className="sidebar-header">
-          <Webhook size={24} color="var(--primary-color)" />
-          <h2>Hub</h2>
+          <Webhook size={24} color="var(--rust)" />
+          <h2>WebHook<span>Hub</span></h2>
         </div>
 
         <nav className="sidebar-nav">
@@ -178,36 +178,35 @@ const Dashboard = () => {
             className={`nav-item ${activeTab === 'events' ? 'active' : ''}`}
             onClick={() => setActiveTab('events')}
           >
-            <LayoutDashboard size={18} /> Live Events
+            <LayoutDashboard size={16} /> Live Events
           </button>
           <button
             className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
-            <BarChart2 size={18} /> Analytics
+            <BarChart2 size={16} /> Analytics
           </button>
         </nav>
 
         <div className="sidebar-section">
-          <h3>Your Endpoints</h3>
-          <p className="hint">Send webhooks to your base URL or add a custom path at the end to organize them!</p>
+          <h3>Endpoint</h3>
+          <p className="hint">Receive payloads at this unique URL.</p>
           <div className="endpoint-box">
             <code>http://localhost:8080/webhook/{user?.id}/[path]</code>
             <button 
               className="copy-btn-mini" 
               onClick={() => {
                 navigator.clipboard.writeText(`http://localhost:8080/webhook/${user?.id}/default`);
-                alert('URL copied to clipboard!');
               }}
             >
-              Copy
+              <Copy size={12} /> Copy
             </button>
           </div>
         </div>
 
         <div className="sidebar-section forward-section">
-          <h3>Forward To (Local/Remote)</h3>
-          <p className="hint">Where should we resend the data?</p>
+          <h3>Forwarding</h3>
+          <p className="hint">Auto-resend to local or remote server.</p>
           <input
             type="text"
             placeholder="http://localhost:3000/api/webhook"
@@ -215,14 +214,14 @@ const Dashboard = () => {
             onChange={e => setForwardUrl(e.target.value)}
           />
           <button onClick={handleSaveForwardUrl} disabled={savingUrl}>
-            {savingUrl ? 'Saving...' : 'Update Target'}
+            {savingUrl ? 'Updating...' : 'Update Target'}
           </button>
         </div>
 
         <div className="spacer"></div>
 
         <button className="logout-btn" onClick={handleLogout}>
-          <LogOut size={18} /> Logout
+          <LogOut size={16} /> Sign Out
         </button>
       </aside>
 
@@ -230,127 +229,117 @@ const Dashboard = () => {
         <header className="main-header glass-panel">
           <h1>{activeTab === 'events' ? 'Events Log' : 'Analytics Dashboard'}</h1>
           <div className="header-actions">
-            <button className="refresh-btn" onClick={fetchEvents}>
-              <RefreshCw size={18} className={loading ? 'spinning' : ''} /> Refresh
+            <button className="refresh-btn" onClick={fetchEvents} disabled={loading}>
+              <RefreshCw size={16} className={loading ? 'spinning' : ''} />
+              {loading ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
         </header>
 
         {activeTab === 'events' ? (
-          <>
-            {/* Filter Bar */}
-            <div className="filter-bar glass-panel">
-              <div className="search-input-wrapper">
-                <Search size={16} />
-                <input
-                  type="text"
-                  placeholder="Search payload or endpoint..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="filter-selects">
-                <div className="select-wrapper">
-                  <Filter size={14} />
-                  <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                    <option value="ALL">All Status</option>
-                    <option value="SUCCESS">Success</option>
-                    <option value="FAILED">Failed</option>
-                  </select>
+          <div className="events-container">
+            {/* List Panel */}
+            <div className="events-list-panel">
+              <div className="filter-bar glass-panel">
+                <div className="search-input-wrapper">
+                  <Search size={16} />
+                  <input
+                    type="text"
+                    placeholder="Filter payloads..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
                 </div>
-                <div className="select-wrapper">
-                  <Filter size={14} />
+                <div className="filter-group">
+                  <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <option value="ALL">Status</option>
+                    <option value="SUCCESS">OK</option>
+                    <option value="FAILED">ERR</option>
+                  </select>
                   <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)}>
-                    <option value="ALL">All Methods</option>
+                    <option value="ALL">Method</option>
                     <option value="POST">POST</option>
                     <option value="GET">GET</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="events-scroll custom-scrollbar">
+                <AnimatePresence initial={false}>
+                  {filteredEvents.map(event => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className={`event-card glass-panel ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedEvent(event)}
+                    >
+                      <div className="event-meta">
+                        <span className={`method-badge ${event.method}`}>{event.method}</span>
+                        <span className="event-time">
+                          {new Date(event.createdAt).toLocaleTimeString([], { hour12: false })}
+                        </span>
+                      </div>
+                      <div className="event-path">/{event.endpointPath || 'default'}</div>
+                      <div className={`status-badge ${event.status.toLowerCase()}`}>
+                        {event.status === 'SUCCESS' ? '200 OK' : '500 ERROR'}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {filteredEvents.length === 0 && !loading && (
+                  <div className="empty-state" style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--muted)' }}>
+                    <Server size={28} style={{ marginBottom: '0.75rem', opacity: 0.5 }} />
+                    <p style={{ fontSize: '0.75rem' }}>No events recorded.</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="content-split">
-              <div className="events-list glass-panel custom-scrollbar">
-                {loading && events.length === 0 ? (
-                  <div className="empty-state">Loading events...</div>
-                ) : filteredEvents.length === 0 ? (
-                  <div className="empty-state">
-                    <Server size={48} opacity={0.5} />
-                    <p>No webhooks found.</p>
+            {/* Detail Panel */}
+            <div className="detail-panel glass-panel">
+              {selectedEvent ? (
+                <>
+                  <div className="detail-header">
+                    <div className="detail-title">
+                      <h2>/{selectedEvent.endpointPath || 'default'}</h2>
+                      <div className="detail-id">UUID: {selectedEvent.id}</div>
+                    </div>
+                    <button className="replay-btn" onClick={() => handleReplay(selectedEvent.id)} disabled={replaying}>
+                      <Send size={14} className={replaying ? 'spinning' : ''} />
+                      {replaying ? 'Replaying...' : 'Replay Event'}
+                    </button>
                   </div>
-                ) : (
-                  filteredEvents.map(event => (
-                    <div
-                      key={event.id}
-                      className={`event-card ${selectedEvent?.id === event.id ? 'active' : ''}`}
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      <div className="event-card-header">
-                        <span className={`badge-${event.method.toLowerCase()}`}>{event.method}</span>
-                        <span className="time">{new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                      </div>
-                      <div className="event-card-body">
-                        <span className={`status-icon ${event.status.toLowerCase()}`}>
-                          {event.status === 'SUCCESS' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                        </span>
-                        <span className="event-path">/{event.endpointPath || ''}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
 
-              <div className="event-detail glass-panel custom-scrollbar">
-                {selectedEvent ? (
-                  <div className="detail-content">
-                    <div className="detail-header">
-                      <div className="detail-title">
-                        <span className={`method-badge large ${selectedEvent.method.toLowerCase()}`}>{selectedEvent.method}</span>
-                        <h3>/{selectedEvent.endpointPath}</h3>
-                      </div>
-                      <div className="detail-actions">
-                        <button className="replay-btn" onClick={() => handleReplay(selectedEvent.id)} disabled={replaying}>
-                          <Send size={16} className={replaying ? 'sending' : ''} /> {replaying ? 'Replaying...' : 'Replay'}
-                        </button>
-                      </div>
-                    </div>
-
+                  <div className="detail-scroll custom-scrollbar">
                     {selectedEvent.errorMessage && (
-                      <div className="error-banner">
-                        <AlertCircle size={16} />
-                        <span>{selectedEvent.errorMessage}</span>
+                      <div className="detail-section" style={{ background: 'rgba(231, 76, 60, 0.05)', padding: '1rem', borderRadius: '4px', border: '1px solid rgba(231, 76, 60, 0.2)', color: '#E74C3C', fontSize: '0.75rem' }}>
+                        <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>Processing Error</div>
+                        {selectedEvent.errorMessage}
                       </div>
                     )}
 
                     <div className="detail-section">
-                      <h4>Headers</h4>
-                      <div className="code-block">
-                        {renderHeaders(selectedEvent.headers)}
-                      </div>
+                      <h3><Terminal size={14} /> Headers</h3>
+                      {renderHeaders(selectedEvent.headers)}
                     </div>
 
                     <div className="detail-section">
-                      <h4>Payload</h4>
-                      <div className="json-viewer-wrapper code-block">
-                        {renderPayload(selectedEvent.payload)}
+                      <h3><Webhook size={14} /> Payload</h3>
+                      <div className="font-mono">
+                        <JsonViewer src={selectedEvent.payload} raw={selectedEvent.payload} />
                       </div>
                     </div>
-
-                    <div className="detail-meta">
-                      <span>Received at: {new Date(selectedEvent.createdAt).toLocaleString()}</span>
-                      <span>ID: {selectedEvent.id}</span>
-                    </div>
                   </div>
-                ) : (
-                  <div className="empty-state">
-                    <p>Select an event to view details</p>
-                  </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '0.8rem' }}>
+                  Select an event to view full inspection data.
+                </div>
+              )}
             </div>
-          </>
+          </div>
         ) : (
           <AnalyticsView />
         )}
