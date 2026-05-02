@@ -48,7 +48,15 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.ok("User registered successfully");
+        // Auto-login after registration
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities("USER")
+                .build();
+        String token = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getUsername()));
     }
 
     @PostMapping("/login")

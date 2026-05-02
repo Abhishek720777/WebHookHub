@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Copy, Check } from 'lucide-react';
 
 function tokenize(json) {
   return json.replace(
@@ -40,7 +41,7 @@ const JsonViewer = ({ src, raw }) => {
   return (
     <div className="json-viewer">
       <button className="json-copy-btn" onClick={handleCopy}>
-        {copied ? '✓ Copied!' : '⧉ Copy'}
+        {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
       </button>
       {isJson ? (
         <pre

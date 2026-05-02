@@ -173,52 +173,52 @@ const Dashboard = () => {
           <h2>WebHook<span>Hub</span></h2>
         </div>
 
-        <nav className="sidebar-nav">
-          <button
-            className={`nav-item ${activeTab === 'events' ? 'active' : ''}`}
-            onClick={() => setActiveTab('events')}
-          >
-            <LayoutDashboard size={16} /> Live Events
-          </button>
-          <button
-            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analytics')}
-          >
-            <BarChart2 size={16} /> Analytics
-          </button>
-        </nav>
-
-        <div className="sidebar-section">
-          <h3>Endpoint</h3>
-          <p className="hint">Receive payloads at this unique URL.</p>
-          <div className="endpoint-box">
-            <code>http://localhost:8080/webhook/{user?.id}/[path]</code>
-            <button 
-              className="copy-btn-mini" 
-              onClick={() => {
-                navigator.clipboard.writeText(`http://localhost:8080/webhook/${user?.id}/default`);
-              }}
+        <div className="sidebar-scroll-area custom-scrollbar">
+          <nav className="sidebar-nav">
+            <button
+              className={`nav-item ${activeTab === 'events' ? 'active' : ''}`}
+              onClick={() => setActiveTab('events')}
             >
-              <Copy size={12} /> Copy
+              <LayoutDashboard size={16} /> Live Events
+            </button>
+            <button
+              className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+              onClick={() => setActiveTab('analytics')}
+            >
+              <BarChart2 size={16} /> Analytics
+            </button>
+          </nav>
+
+          <div className="sidebar-section">
+            <h3>Endpoint</h3>
+            <p className="hint">Receive payloads at this unique URL.</p>
+            <div className="endpoint-box">
+              <code>http://localhost:8080/webhook/{user?.id}/[path]</code>
+              <button 
+                className="copy-btn-mini" 
+                onClick={() => {
+                  navigator.clipboard.writeText(`http://localhost:8080/webhook/${user?.id}/default`);
+                }}
+              >
+                <Copy size={12} /> Copy
+              </button>
+            </div>
+          </div>
+
+          <div className="sidebar-section forward-section">
+            <h3>Forwarding</h3>
+            <p className="hint">Auto-resend to local or remote server.</p>
+            <input
+              type="text"
+              placeholder="http://localhost:3000/api/webhook"
+              value={forwardUrl}
+              onChange={e => setForwardUrl(e.target.value)}
+            />
+            <button onClick={handleSaveForwardUrl} disabled={savingUrl}>
+              {savingUrl ? 'Updating...' : 'Update Target'}
             </button>
           </div>
         </div>
-
-        <div className="sidebar-section forward-section">
-          <h3>Forwarding</h3>
-          <p className="hint">Auto-resend to local or remote server.</p>
-          <input
-            type="text"
-            placeholder="http://localhost:3000/api/webhook"
-            value={forwardUrl}
-            onChange={e => setForwardUrl(e.target.value)}
-          />
-          <button onClick={handleSaveForwardUrl} disabled={savingUrl}>
-            {savingUrl ? 'Updating...' : 'Update Target'}
-          </button>
-        </div>
-
-        <div className="spacer"></div>
 
         <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={16} /> Sign Out

@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "simulate": "node simulator.js",
+    "listen": "node listener.js",
     "test": "vitest run"
   },
   "dependencies": {

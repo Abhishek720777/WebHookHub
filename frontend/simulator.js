@@ -1,6 +1,7 @@
-const axios = require('axios');
+import axios from 'axios';
 
-const ENDPOINT = 'http://localhost:8080/webhook/1';
+const USER_ID = 4;
+const BASE_URL = `http://localhost:8080/webhook/${USER_ID}`;
 
 const payloads = [
   {
@@ -76,19 +77,45 @@ const payloads = [
 ];
 
 async function simulate() {
-  console.log('Starting real-world webhook simulation...\n');
+  console.log('🚀 Starting real-world Webhook simulation for User ID:', USER_ID);
+  console.log('--------------------------------------------------\n');
+
+  const providerPaths = {
+    'Stripe': 'stripe',
+    'GitHub': 'github',
+    'Shopify': 'shopify',
+    'Discord': 'discord'
+  };
+
   for (const p of payloads) {
+    const provider = Object.keys(providerPaths).find(key => p.name.includes(key));
+    const path = provider ? providerPaths[provider] : 'default';
+    const targetUrl = `${BASE_URL}/${path}`;
+
     try {
-      console.log(`Sending [${p.name}]...`);
-      await axios.post(ENDPOINT, p.data, { headers: p.headers });
-      console.log('✅ Success\n');
+      console.log(`📡 Sending [${p.name}]`);
+      console.log(`🔗 Target: ${targetUrl}`);
+
+      const start = Date.now();
+      await axios.post(targetUrl, p.data, { headers: p.headers });
+      const duration = Date.now() - start;
+
+      console.log(`✅ Success (${duration}ms)\n`);
     } catch (e) {
-      console.error(`❌ Failed: ${e.message}\n`);
+      console.error(`❌ Failed: ${e.message}`);
+      if (e.response) {
+        console.error(`   Response Status: ${e.response.status}`);
+        console.error(`   Response Data: ${JSON.stringify(e.response.data)}`);
+      }
+      console.log('\n');
     }
-    // wait 3 seconds before next
-    await new Promise(r => setTimeout(r, 3000));
+
+    // wait 2.5 seconds before next
+    await new Promise(r => setTimeout(r, 2500));
   }
-  console.log('Done simulating webhooks!');
+
+  console.log('--------------------------------------------------');
+  console.log('✨ All simulations complete! Check your Dashboard.');
 }
 
 simulate();

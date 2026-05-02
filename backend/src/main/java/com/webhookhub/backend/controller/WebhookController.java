@@ -26,8 +26,12 @@ public class WebhookController {
     private final WebhookEventRepository eventRepository;
     private final UserRepository userRepository;
 
-    @RequestMapping(value = {"/webhook/{userId}", "/webhook/{userId}/{endpointPath}"}, method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
-    public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, @PathVariable(required = false) String endpointPath, HttpServletRequest request) throws IOException {
+    @RequestMapping(value = "/webhook/{userId}/**", method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, HttpServletRequest request) throws IOException {
+        String fullPath = (String) request.getAttribute(org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String prefix = "/webhook/" + userId;
+        String endpointPath = fullPath.length() > prefix.length() ? fullPath.substring(prefix.length() + 1) : "default";
+        
         String method = request.getMethod();
         
         Map<String, String> headersMap = new HashMap<>();
@@ -39,10 +43,7 @@ public class WebhookController {
 
         String payload = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 
-        // If endpointPath is null, default to "default"
-        String path = (endpointPath != null && !endpointPath.isEmpty()) ? endpointPath : "default";
-
-        WebhookEvent event = webhookService.processIncomingWebhook(userId, path, method, headersMap, payload);
+        WebhookEvent event = webhookService.processIncomingWebhook(userId, endpointPath, method, headersMap, payload);
         return ResponseEntity.ok(event);
     }
 

@@ -30,8 +30,10 @@ const Register = () => {
     setLoading(true);
     setError('');
     try {
-      await api.post('/auth/register', formData);
-      navigate('/login');
+      const res = await api.post('/auth/register', formData);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('userId', res.data.userId);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data || 'Registration failed. Please try again.');
     } finally {
