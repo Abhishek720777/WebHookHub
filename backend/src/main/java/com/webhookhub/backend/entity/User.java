@@ -14,8 +14,16 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(unique = true, nullable = false)
+    private String email;
+
     @Column(nullable = false)
     private String password;
+
+    private String otp;
+
+    @Column(name = "otp_expiry")
+    private java.time.LocalDateTime otpExpiry;
 
     @Column(name = "forward_url")
     private String forwardUrl;
