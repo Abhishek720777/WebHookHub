@@ -21,13 +21,13 @@ public class AnalyticsService {
 
         long success = statusDist.stream()
                 .filter(m -> "SUCCESS".equals(m.get("status")))
-                .mapToLong(m -> (Long) m.get("count"))
+                .mapToLong(m -> ((Number) m.get("count")).longValue())
                 .findFirst()
                 .orElse(0L);
 
         long failure = statusDist.stream()
                 .filter(m -> "FAILED".equals(m.get("status")))
-                .mapToLong(m -> (Long) m.get("count"))
+                .mapToLong(m -> ((Number) m.get("count")).longValue())
                 .findFirst()
                 .orElse(0L);
 

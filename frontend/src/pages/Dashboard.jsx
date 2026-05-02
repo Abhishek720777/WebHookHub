@@ -67,6 +67,9 @@ const Dashboard = () => {
         stompClient = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,
+          connectHeaders: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
           onConnect: () => {
             console.log('Connected to WebSocket!');
             stompClient.subscribe(`/topic/events/${currentUser.id}`, (message) => {
@@ -166,15 +169,39 @@ const Dashboard = () => {
 
       <aside className="sidebar glass-panel">
         <div className="sidebar-header">
-          <Webhook size={32} color="var(--primary-color)" />
+          <Webhook size={24} color="var(--primary-color)" />
           <h2>Hub</h2>
         </div>
+
+        <nav className="sidebar-nav">
+          <button
+            className={`nav-item ${activeTab === 'events' ? 'active' : ''}`}
+            onClick={() => setActiveTab('events')}
+          >
+            <LayoutDashboard size={18} /> Live Events
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <BarChart2 size={18} /> Analytics
+          </button>
+        </nav>
 
         <div className="sidebar-section">
           <h3>Your Endpoints</h3>
           <p className="hint">Send webhooks to your base URL or add a custom path at the end to organize them!</p>
           <div className="endpoint-box">
             <code>http://localhost:8080/webhook/{user?.id}/[path]</code>
+            <button 
+              className="copy-btn-mini" 
+              onClick={() => {
+                navigator.clipboard.writeText(`http://localhost:8080/webhook/${user?.id}/default`);
+                alert('URL copied to clipboard!');
+              }}
+            >
+              Copy
+            </button>
           </div>
         </div>
 
@@ -192,21 +219,6 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <nav className="sidebar-nav">
-          <button 
-            className={`nav-item ${activeTab === 'events' ? 'active' : ''}`}
-            onClick={() => setActiveTab('events')}
-          >
-            <LayoutDashboard size={18} /> Live Events
-          </button>
-          <button 
-            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analytics')}
-          >
-            <BarChart2 size={18} /> Analytics
-          </button>
-        </nav>
-
         <div className="spacer"></div>
 
         <button className="logout-btn" onClick={handleLogout}>
@@ -218,7 +230,6 @@ const Dashboard = () => {
         <header className="main-header glass-panel">
           <h1>{activeTab === 'events' ? 'Events Log' : 'Analytics Dashboard'}</h1>
           <div className="header-actions">
-            <span className="live-indicator"><span className="dot"></span> Live Updates Active</span>
             <button className="refresh-btn" onClick={fetchEvents}>
               <RefreshCw size={18} className={loading ? 'spinning' : ''} /> Refresh
             </button>
@@ -273,28 +284,27 @@ const Dashboard = () => {
                   filteredEvents.map(event => (
                     <div
                       key={event.id}
-                      className={`event-item ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      className={`event-card ${selectedEvent?.id === event.id ? 'active' : ''}`}
                       onClick={() => setSelectedEvent(event)}
                     >
-                      <div className="event-item-main">
-                        <span className={`method-badge ${event.method.toLowerCase()}`}>{event.method}</span>
-                        <span className="event-path">/{event.endpointPath}</span>
+                      <div className="event-card-header">
+                        <span className={`badge-${event.method.toLowerCase()}`}>{event.method}</span>
+                        <span className="time">{new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                      </div>
+                      <div className="event-card-body">
                         <span className={`status-icon ${event.status.toLowerCase()}`}>
                           {event.status === 'SUCCESS' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
                         </span>
-                      </div>
-                      <div className="event-item-sub">
-                        <span>{new Date(event.createdAt).toLocaleTimeString()}</span>
-                        {event.errorMessage && <span className="error-hint">!</span>}
+                        <span className="event-path">/{event.endpointPath || ''}</span>
                       </div>
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="event-detail glass-panel">
+              <div className="event-detail glass-panel custom-scrollbar">
                 {selectedEvent ? (
-                  <div className="detail-content custom-scrollbar">
+                  <div className="detail-content">
                     <div className="detail-header">
                       <div className="detail-title">
                         <span className={`method-badge large ${selectedEvent.method.toLowerCase()}`}>{selectedEvent.method}</span>

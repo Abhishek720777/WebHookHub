@@ -24,7 +24,8 @@ public class WebhookService {
     private final SimpMessagingTemplate messagingTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public WebhookEvent processIncomingWebhook(Long userId, String endpointPath, String method, Map<String, String> headers,
+    public WebhookEvent processIncomingWebhook(Long userId, String endpointPath, String method,
+            Map<String, String> headers,
             String payload) {
         WebhookEvent event = new WebhookEvent();
         event.setUserId(userId);
@@ -46,13 +47,20 @@ public class WebhookService {
     }
 
     public WebhookEvent replayEvent(Long eventId) {
-        WebhookEvent event = eventRepository.findById(eventId)
+        WebhookEvent original = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        User user = userRepository.findById(event.getUserId())
+        User user = userRepository.findById(original.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return executeForwarding(event, user.getForwardUrl());
+        WebhookEvent newEvent = new WebhookEvent();
+        newEvent.setUserId(original.getUserId());
+        newEvent.setEndpointPath(original.getEndpointPath());
+        newEvent.setMethod(original.getMethod());
+        newEvent.setHeaders(original.getHeaders());
+        newEvent.setPayload(original.getPayload());
+
+        return executeForwarding(newEvent, user.getForwardUrl());
     }
 
     private WebhookEvent executeForwarding(WebhookEvent event, String forwardUrl) {
@@ -91,7 +99,7 @@ public class WebhookService {
         WebhookEvent savedEvent = eventRepository.save(event);
         // Broadcast the event to any connected WebSocket clients
         messagingTemplate.convertAndSend("/topic/events/" + event.getUserId(), savedEvent);
-        
+
         return savedEvent;
     }
 }
