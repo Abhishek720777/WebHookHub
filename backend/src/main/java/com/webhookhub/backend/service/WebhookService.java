@@ -59,7 +59,9 @@ public class WebhookService {
         if (forwardUrl == null || forwardUrl.isEmpty()) {
             event.setStatus("SUCCESS");
             event.setErrorMessage("No forward URL configured. Logged successfully.");
-            return eventRepository.save(event);
+            WebhookEvent saved = eventRepository.save(event);
+            messagingTemplate.convertAndSend("/topic/events/" + event.getUserId(), saved);
+            return saved;
         }
 
         try {
