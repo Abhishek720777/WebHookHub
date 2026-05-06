@@ -17,8 +17,14 @@ public class WebhookEvent {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "channel_id")
+    private Long channelId;
+
     @Column(name = "endpoint_path")
     private String endpointPath;
+
+    @Column(name = "is_verified")
+    private Boolean isVerified = false;
 
     @Column(nullable = false)
     private String method;

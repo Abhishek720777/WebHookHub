@@ -4,6 +4,7 @@ import com.webhookhub.backend.dto.AnalyticsResponse;
 import com.webhookhub.backend.entity.User;
 import com.webhookhub.backend.repository.UserRepository;
 import com.webhookhub.backend.security.JwtAuthFilter;
+import com.webhookhub.backend.security.RateLimitFilter;
 import com.webhookhub.backend.security.SecurityConfig;
 import com.webhookhub.backend.service.AnalyticsService;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     controllers = AnalyticsController.class,
     excludeAutoConfiguration = SecurityAutoConfiguration.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = {SecurityConfig.class, JwtAuthFilter.class})
+            classes = {SecurityConfig.class, JwtAuthFilter.class, RateLimitFilter.class})
 )
 @DisplayName("AnalyticsController Tests")
 class AnalyticsControllerTest {

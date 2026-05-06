@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Webhook, LogOut, RefreshCw, Server, Send, 
   AlertCircle, CheckCircle2, Search, Filter,
-  LayoutDashboard, BarChart2, Copy, Terminal
+  LayoutDashboard, BarChart2, Copy, Terminal, Trash2,
+  FolderPlus, Plus, Hash, X, Shield
 } from 'lucide-react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
@@ -29,6 +30,16 @@ const Dashboard = () => {
 
   // UI State
   const [activeTab, setActiveTab] = useState('events'); // 'events' or 'analytics'
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  // Channels State
+  const [channels, setChannels] = useState([]);
+  const [selectedChannelId, setSelectedChannelId] = useState('ALL');
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelSecret, setNewChannelSecret] = useState('');
+  const [isAddingChannel, setIsAddingChannel] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const navigate = useNavigate();
 
@@ -44,17 +55,27 @@ const Dashboard = () => {
     }
   };
 
-  const fetchEvents = async () => {
-    setLoading(true);
+  const fetchChannels = async () => {
     try {
-      const res = await api.get('/events');
-      console.log('Fetched events:', res.data.length);
-      setEvents(res.data);
-      if (res.data.length > 0 && !selectedEvent) {
-        setSelectedEvent(res.data[0]);
-      }
+      const res = await api.get('/channels');
+      setChannels(res.data);
+      return res.data;
     } catch (e) {
-      console.error(e);
+      console.error('Failed to fetch channels:', e);
+      return [];
+    }
+  };
+
+  const fetchEvents = async (pageToFetch = 0, isLoadMore = false) => {
+    if (!isLoadMore) setLoading(true);
+    try {
+      const response = await api.get(`/events?page=${pageToFetch}&size=20`);
+      const newData = response.data.content || [];
+      setEvents(prev => isLoadMore ? [...prev, ...newData] : newData);
+      setHasMore(!response.data.last);
+      setPage(pageToFetch);
+    } catch (error) {
+      console.error('Error fetching events:', error);
     } finally {
       setLoading(false);
     }
@@ -65,6 +86,7 @@ const Dashboard = () => {
 
     const initialize = async () => {
       const currentUser = await fetchUser();
+      await fetchChannels();
       await fetchEvents();
 
       if (currentUser?.id) {
@@ -129,6 +151,48 @@ const Dashboard = () => {
     }
   };
 
+  const handleDelete = async (eventId) => {
+    try {
+      await api.delete(`/events/${eventId}`);
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+      if (selectedEvent?.id === eventId) setSelectedEvent(null);
+    } catch (e) {
+      console.error('Delete failed:', e);
+    } finally {
+      setConfirmDeleteId(null);
+    }
+  };
+
+  const handleCreateChannel = async (e) => {
+    e.preventDefault();
+    if (!newChannelName.trim()) return;
+    try {
+      const response = await api.post('/channels', { 
+        name: newChannelName,
+        signingSecret: newChannelSecret 
+      });
+      setChannels([...channels, response.data]);
+      setNewChannelName('');
+      setNewChannelSecret('');
+      setIsAddingChannel(false);
+      setSelectedChannelId(response.data.id);
+    } catch (error) {
+      console.error('Error creating channel:', error);
+    }
+  };
+
+  const handleDeleteChannel = async (e, channelId) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this project? All associated event links will stop working.')) return;
+    try {
+      await api.delete(`/channels/${channelId}`);
+      setChannels(prev => prev.filter(c => c.id !== channelId));
+      if (selectedChannelId === channelId) setSelectedChannelId('ALL');
+    } catch (e) {
+      console.error('Failed to delete channel:', e);
+    }
+  };
+
   const renderHeaders = (headersStr) => {
     if (!headersStr) return null;
     try {
@@ -161,9 +225,12 @@ const Dashboard = () => {
 
     const matchesStatus = statusFilter === 'ALL' || event.status === statusFilter;
     const matchesMethod = methodFilter === 'ALL' || event.method === methodFilter;
+    const matchesChannel = selectedChannelId === 'ALL' || event.channelId === selectedChannelId;
 
-    return matchesSearch && matchesStatus && matchesMethod;
+    return matchesSearch && matchesStatus && matchesMethod && matchesChannel;
   });
+
+  const activeChannel = channels.find(c => c.id === selectedChannelId);
 
   return (
     <div className="dashboard-layout">
@@ -193,18 +260,78 @@ const Dashboard = () => {
           </nav>
 
           <div className="sidebar-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3>Projects</h3>
+              <button 
+                className="add-channel-btn-mini" 
+                onClick={() => setIsAddingChannel(!isAddingChannel)}
+                title="New Project"
+              >
+                {isAddingChannel ? <X size={12} /> : <Plus size={12} />}
+              </button>
+            </div>
+            
+            {isAddingChannel && (
+              <form className="add-channel-form" onSubmit={handleCreateChannel}>
+                <input 
+                  autoFocus
+                  placeholder="Project name..." 
+                  value={newChannelName}
+                  onChange={e => setNewChannelName(e.target.value)}
+                />
+                <input 
+                  placeholder="Signing secret (optional)" 
+                  value={newChannelSecret}
+                  onChange={e => setNewChannelSecret(e.target.value)}
+                  type="password"
+                  style={{ marginTop: '0.25rem', fontSize: '0.7rem' }}
+                />
+                <button type="submit" className="add-channel-btn-mini" style={{ width: '100%', marginTop: '0.25rem' }}>Create Project</button>
+              </form>
+            )}
+
+            <div className="channels-list">
+              <div 
+                className={`channel-item ${selectedChannelId === 'ALL' ? 'active' : ''}`}
+                onClick={() => setSelectedChannelId('ALL')}
+              >
+                <div className="channel-name"><Hash size={10} /> All Projects</div>
+              </div>
+              {channels.map(channel => (
+                <div 
+                  key={channel.id} 
+                  className={`channel-item ${selectedChannelId === channel.id ? 'active' : ''}`}
+                  onClick={() => setSelectedChannelId(channel.id)}
+                >
+                  <div className="channel-name">{channel.name}</div>
+                  <button className="channel-delete-btn" onClick={(e) => handleDeleteChannel(e, channel.id)}>
+                    <X size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="sidebar-section">
             <h3>Endpoint</h3>
             <p className="hint">Receive payloads at this unique URL.</p>
             <div className="endpoint-box">
-              <code>http://localhost:8080/webhook/{user?.id}/[path]</code>
-              <button 
-                className="copy-btn-mini" 
-                onClick={() => {
-                  navigator.clipboard.writeText(`http://localhost:8080/webhook/${user?.id}/default`);
-                }}
-              >
-                <Copy size={12} /> Copy
-              </button>
+              {selectedChannelId === 'ALL' ? (
+                <span style={{ fontStyle: 'italic', opacity: 0.6 }}>Select a project to see URL</span>
+              ) : (
+                <>
+                  <code>http://localhost:8080/webhook/{user?.id}/{activeChannel?.slug}/[path]</code>
+                  <button 
+                    className="copy-btn-mini" 
+                    onClick={() => {
+                      const url = `http://localhost:8080/webhook/${user?.id}/${activeChannel?.slug}/default`;
+                      navigator.clipboard.writeText(url);
+                    }}
+                  >
+                    <Copy size={12} /> Copy
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -276,21 +403,60 @@ const Dashboard = () => {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       className={`event-card glass-panel ${selectedEvent?.id === event.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedEvent(event)}
+                      onClick={() => confirmDeleteId !== event.id && setSelectedEvent(event)}
                     >
-                      <div className="event-meta">
-                        <span className={`method-badge ${event.method}`}>{event.method}</span>
-                        <span className="event-time">
-                          {new Date(event.createdAt).toLocaleTimeString([], { hour12: false })}
-                        </span>
-                      </div>
-                      <div className="event-path">/{event.endpointPath || 'default'}</div>
-                      <div className={`status-badge ${event.status.toLowerCase()}`}>
-                        {event.status === 'SUCCESS' ? '200 OK' : '500 ERROR'}
-                      </div>
+                      {confirmDeleteId === event.id ? (
+                        <div className="delete-confirm">
+                          <span>Delete this event?</span>
+                          <div className="delete-confirm-actions">
+                            <button
+                              className="delete-confirm-yes"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }}
+                            >
+                              Delete
+                            </button>
+                            <button
+                              className="delete-confirm-no"
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="event-meta">
+                            <span className={`method-badge ${event.method}`}>{event.method}</span>
+                            <span className="event-time">
+                              {new Date(event.createdAt).toLocaleTimeString([], { hour12: false })}
+                            </span>
+                            <button
+                              className="delete-event-btn"
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(event.id); }}
+                              title="Delete event"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                          <div className="event-path">/{event.endpointPath || 'default'}</div>
+                          <div className={`status-badge ${event.status.toLowerCase()}`}>
+                            {event.status === 'SUCCESS' ? '200 OK' : '500 ERROR'}
+                          </div>
+                          {event.isVerified && (
+                            <div className="verified-badge" title="Signature Verified">
+                              <Shield size={10} />
+                            </div>
+                          )}
+                        </>
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
+                {hasMore && filteredEvents.length > 0 && (
+                  <button className="load-more-btn" onClick={() => fetchEvents(page + 1, true)}>
+                    Load More
+                  </button>
+                )}
                 {filteredEvents.length === 0 && !loading && (
                   <div className="empty-state" style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--muted)' }}>
                     <Server size={28} style={{ marginBottom: '0.75rem', opacity: 0.5 }} />

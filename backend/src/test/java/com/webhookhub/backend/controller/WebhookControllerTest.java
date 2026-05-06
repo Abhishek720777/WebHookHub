@@ -5,6 +5,7 @@ import com.webhookhub.backend.entity.WebhookEvent;
 import com.webhookhub.backend.repository.UserRepository;
 import com.webhookhub.backend.repository.WebhookEventRepository;
 import com.webhookhub.backend.security.JwtAuthFilter;
+import com.webhookhub.backend.security.RateLimitFilter;
 import com.webhookhub.backend.security.SecurityConfig;
 import com.webhookhub.backend.service.WebhookService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +17,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -32,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     controllers = WebhookController.class,
     excludeAutoConfiguration = SecurityAutoConfiguration.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-            classes = {SecurityConfig.class, JwtAuthFilter.class})
+            classes = {SecurityConfig.class, JwtAuthFilter.class, RateLimitFilter.class})
 )
 @DisplayName("WebhookController Tests")
 class WebhookControllerTest {
@@ -52,6 +57,12 @@ class WebhookControllerTest {
     @MockBean
     private UserRepository userRepository;
 
+    @MockBean
+    private com.webhookhub.backend.service.UserService userService;
+
+    @MockBean
+    private com.webhookhub.backend.service.WebhookChannelService channelService;
+
     private WebhookEvent sampleEvent;
 
     @BeforeEach
@@ -70,12 +81,12 @@ class WebhookControllerTest {
     // --- /webhook/{userId} endpoint ---
 
     @Test
-    @DisplayName("POST /webhook/{userId} should accept payload and return 200")
+    @DisplayName("POST /webhook/{userId}/{channelSlug} should accept payload and return 200")
     void shouldAcceptWebhookOnBaseEndpoint() throws Exception {
-        when(webhookService.processIncomingWebhook(anyLong(), anyString(), anyString(), anyMap(), anyString()))
+        when(webhookService.processIncomingWebhook(anyLong(), any(), anyString(), anyString(), anyMap(), anyString()))
                 .thenReturn(sampleEvent);
 
-        mockMvc.perform(post("/webhook/1")
+        mockMvc.perform(post("/webhook/1/my-channel")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"hello\":\"world\"}"))
                 .andExpect(status().isOk())
@@ -84,13 +95,13 @@ class WebhookControllerTest {
     }
 
     @Test
-    @DisplayName("POST /webhook/{userId}/{endpointPath} should store the custom path")
+    @DisplayName("POST /webhook/{userId}/{channelSlug}/{endpointPath} should store the custom path")
     void shouldAcceptWebhookOnCustomEndpoint() throws Exception {
         sampleEvent.setEndpointPath("stripe");
-        when(webhookService.processIncomingWebhook(anyLong(), eq("stripe"), anyString(), anyMap(), anyString()))
+        when(webhookService.processIncomingWebhook(anyLong(), any(), eq("stripe"), anyString(), anyMap(), anyString()))
                 .thenReturn(sampleEvent);
 
-        mockMvc.perform(post("/webhook/1/stripe")
+        mockMvc.perform(post("/webhook/1/my-channel/stripe")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"event\":\"payment.captured\"}"))
                 .andExpect(status().isOk())
@@ -108,7 +119,8 @@ class WebhookControllerTest {
         user.setPassword("pass");
 
         when(userRepository.findByUsername(any())).thenReturn(java.util.Optional.of(user));
-        when(eventRepository.findByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(sampleEvent));
+        when(eventRepository.findByUserIdOrderByCreatedAtDesc(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(sampleEvent)));
 
         // Security is excluded — pass a mock authentication via anonymous inner class
         org.springframework.security.authentication.UsernamePasswordAuthenticationToken auth =
@@ -121,9 +133,10 @@ class WebhookControllerTest {
             return request;
         }))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].status").value("SUCCESS"))
-                .andExpect(jsonPath("$[0].endpointPath").value("default"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].status").value("SUCCESS"))
+                .andExpect(jsonPath("$.content[0].endpointPath").value("default"));
     }
 
     // --- /api/events/{id}/replay endpoint ---

@@ -21,17 +21,34 @@ public class WebhookService {
     private final WebhookEventRepository eventRepository;
     private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final com.webhookhub.backend.repository.WebhookChannelRepository channelRepository;
+    private final SignatureVerificationService verificationService;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public WebhookEvent processIncomingWebhook(Long userId, String endpointPath, String method,
+    public WebhookEvent processIncomingWebhook(Long userId, Long channelId, String endpointPath, String method,
             Map<String, String> headers,
             String payload) {
         WebhookEvent event = new WebhookEvent();
         event.setUserId(userId);
+        event.setChannelId(channelId);
         event.setEndpointPath(endpointPath);
         event.setMethod(method);
         event.setHeaders(headers.toString());
         event.setPayload(payload);
+
+        // Signature Verification Logic
+        if (channelId != null) {
+            channelRepository.findById(channelId).ifPresent(channel -> {
+                if (channel.getSigningSecret() != null) {
+                    String signature = headers.getOrDefault("x-hub-signature-256", 
+                                       headers.getOrDefault("stripe-signature", null));
+                    if (signature != null) {
+                        boolean verified = verificationService.verifyHmacSha256(payload, signature, channel.getSigningSecret());
+                        event.setIsVerified(verified);
+                    }
+                }
+            });
+        }
 
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -54,12 +71,24 @@ public class WebhookService {
 
         WebhookEvent newEvent = new WebhookEvent();
         newEvent.setUserId(original.getUserId());
+        newEvent.setChannelId(original.getChannelId());
         newEvent.setEndpointPath(original.getEndpointPath());
         newEvent.setMethod(original.getMethod());
         newEvent.setHeaders(original.getHeaders());
         newEvent.setPayload(original.getPayload());
 
         return executeForwarding(newEvent, user.getForwardUrl());
+    }
+
+    public void deleteEvent(Long eventId, Long userId) {
+        WebhookEvent event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        
+        if (!event.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to delete this event");
+        }
+        
+        eventRepository.delete(event);
     }
 
     private WebhookEvent executeForwarding(WebhookEvent event, String forwardUrl) {

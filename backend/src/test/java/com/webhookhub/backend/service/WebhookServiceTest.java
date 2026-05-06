@@ -32,6 +32,12 @@ class WebhookServiceTest {
     private UserService userService;
 
     @Mock
+    private com.webhookhub.backend.repository.WebhookChannelRepository channelRepository;
+
+    @Mock
+    private SignatureVerificationService verificationService;
+
+    @Mock
     private SimpMessagingTemplate messagingTemplate;
 
     private WebhookService webhookService;
@@ -40,7 +46,7 @@ class WebhookServiceTest {
 
     @BeforeEach
     void setUp() {
-        webhookService = new WebhookService(eventRepository, userService, messagingTemplate);
+        webhookService = new WebhookService(eventRepository, userService, messagingTemplate, channelRepository, verificationService);
 
         testUser = new User();
         testUser.setId(1L);
@@ -60,7 +66,7 @@ class WebhookServiceTest {
 
         // Act
         WebhookEvent result = webhookService.processIncomingWebhook(
-                1L, "default", "POST", Map.of("content-type", "application/json"), "{\"key\":\"value\"}");
+                1L, null, "default", "POST", Map.of("content-type", "application/json"), "{\"key\":\"value\"}");
 
         // Assert
         assertThat(result.getStatus()).isEqualTo("SUCCESS");
@@ -78,7 +84,7 @@ class WebhookServiceTest {
 
         // Act
         WebhookEvent result = webhookService.processIncomingWebhook(
-                99L, "stripe", "POST", Map.of(), "{}");
+                99L, null, "stripe", "POST", Map.of(), "{}");
 
         // Assert
         assertThat(result.getStatus()).isEqualTo("FAILED");
@@ -94,7 +100,7 @@ class WebhookServiceTest {
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
-        webhookService.processIncomingWebhook(1L, "github", "POST", Map.of(), "{}");
+        webhookService.processIncomingWebhook(1L, null, "github", "POST", Map.of(), "{}");
 
         // Assert — capture what actually got saved to the DB
         ArgumentCaptor<WebhookEvent> captor = ArgumentCaptor.forClass(WebhookEvent.class);
@@ -110,7 +116,7 @@ class WebhookServiceTest {
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
-        webhookService.processIncomingWebhook(1L, "default", "POST", Map.of(), "{}");
+        webhookService.processIncomingWebhook(1L, null, "default", "POST", Map.of(), "{}");
 
         // Assert — verify the STOMP topic was used
         verify(messagingTemplate).convertAndSend(
@@ -128,11 +134,32 @@ class WebhookServiceTest {
 
         // Act
         WebhookEvent result = webhookService.processIncomingWebhook(
-                1L, "default", "POST", Map.of(), "{}");
+                1L, null, "default", "POST", Map.of(), "{}");
 
         // Assert
         assertThat(result.getStatus()).isEqualTo("FAILED");
         assertThat(result.getErrorMessage()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("Should mark event as verified when valid signature is provided")
+    void shouldVerifySignatureWhenSecretConfigured() {
+        // Arrange
+        com.webhookhub.backend.entity.WebhookChannel channel = new com.webhookhub.backend.entity.WebhookChannel();
+        channel.setId(10L);
+        channel.setSigningSecret("secret");
+
+        when(channelRepository.findById(10L)).thenReturn(Optional.of(channel));
+        when(userService.getUserById(1L)).thenReturn(testUser);
+        when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(verificationService.verifyHmacSha256(anyString(), anyString(), eq("secret"))).thenReturn(true);
+
+        // Act
+        WebhookEvent result = webhookService.processIncomingWebhook(
+                1L, 10L, "default", "POST", Map.of("x-hub-signature-256", "valid-sig"), "{}");
+
+        // Assert
+        assertThat(result.getIsVerified()).isTrue();
     }
 
     // --- replayEvent() Tests ---

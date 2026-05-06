@@ -600,3 +600,225 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
+
+/* ── Delete Event Button ─────────────────────────────── */
+.delete-event-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.event-card:hover .delete-event-btn {
+  opacity: 1;
+}
+
+.delete-event-btn:hover {
+  color: #E74C3C;
+  background: rgba(231, 76, 60, 0.08);
+}
+
+/* ── Inline Delete Confirmation ──────────────────────── */
+.delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.1rem 0;
+}
+
+.delete-confirm > span {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.delete-confirm-yes {
+  flex: 1;
+  padding: 0.45rem;
+  background: rgba(231, 76, 60, 0.08);
+  color: #E74C3C;
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  border-radius: 2px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.delete-confirm-yes:hover {
+  background: rgba(231, 76, 60, 0.18);
+  border-color: #E74C3C;
+}
+
+.delete-confirm-no {
+  flex: 1;
+  padding: 0.45rem;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.delete-confirm-no:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ── Channels Management ────────────────────────────── */
+.channels-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+}
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  color: var(--muted);
+  border: 1px solid transparent;
+}
+
+.channel-item:hover {
+  background: rgba(196, 86, 43, 0.05);
+  color: var(--ink);
+}
+
+.channel-item.active {
+  background: var(--white);
+  border-color: var(--border);
+  color: var(--rust);
+  font-weight: 700;
+  box-shadow: 2px 2px 0 rgba(196, 86, 43, 0.1);
+}
+
+.channel-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channel-delete-btn {
+  opacity: 0;
+  padding: 0.15rem;
+  border-radius: 2px;
+  color: var(--muted);
+  transition: var(--transition-fast);
+}
+
+.channel-item:hover .channel-delete-btn {
+  opacity: 1;
+}
+
+.channel-delete-btn:hover {
+  color: #E74C3C;
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.add-channel-form {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.add-channel-form input {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.65rem;
+  font-family: 'DM Mono', monospace;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  outline: none;
+}
+
+.add-channel-btn-mini {
+  padding: 0.35rem;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-channel-btn-mini:hover {
+  background: var(--rust);
+}
+
+.channel-slug-badge {
+  font-size: 0.55rem;
+  background: var(--border);
+  color: var(--muted);
+  padding: 0.1rem 0.3rem;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+}
+/* Verified Badge */
+.verified-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 2rem;
+  background-color: var(--sage);
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(92, 122, 96, 0.3);
+}
+
+.load-more-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: 1rem;
+}
+
+.load-more-btn:hover {
+  background: var(--cream-2);
+  color: var(--ink);
+  border-color: var(--ink);
+}

@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -33,12 +35,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                 if ("jwt".equals(cookie.getName())) {
                     jwt = cookie.getValue();
-                    System.out.println("DEBUG: Found JWT cookie");
+                    log.debug("Found JWT cookie");
                     break;
                 }
             }
         } else {
-            System.out.println("DEBUG: No cookies received in request to " + path);
+            log.debug("No cookies received in request to {}", path);
         }
 
         // 2. Fallback to Authorization Header

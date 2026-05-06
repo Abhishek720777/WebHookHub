@@ -3,6 +3,7 @@ package com.webhookhub.backend.service;
 import com.webhookhub.backend.dto.AnalyticsResponse;
 import com.webhookhub.backend.repository.WebhookEventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,12 +11,13 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnalyticsService {
 
     private final WebhookEventRepository eventRepository;
 
     public AnalyticsResponse getAnalytics(Long userId) {
-        System.out.println("DEBUG: Fetching analytics for User ID: " + userId);
+        log.debug("Fetching analytics for User ID: {}", userId);
         List<Map<String, Object>> statusDist = eventRepository.countByStatus(userId);
         List<Map<String, Object>> endpointDist = eventRepository.countByEndpoint(userId);
         List<Map<String, Object>> timeSeries = eventRepository.countByTime(userId);
