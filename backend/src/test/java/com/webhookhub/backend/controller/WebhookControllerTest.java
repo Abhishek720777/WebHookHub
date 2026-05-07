@@ -14,7 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.PageImpl;
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
             classes = {SecurityConfig.class, JwtAuthFilter.class, RateLimitFilter.class})
 )
+@ActiveProfiles("test")
 @DisplayName("WebhookController Tests")
 class WebhookControllerTest {
 
@@ -48,19 +50,19 @@ class WebhookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private WebhookService webhookService;
 
-    @MockBean
+    @MockitoBean
     private WebhookEventRepository eventRepository;
 
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
 
-    @MockBean
+    @MockitoBean
     private com.webhookhub.backend.service.UserService userService;
 
-    @MockBean
+    @MockitoBean
     private com.webhookhub.backend.service.WebhookChannelService channelService;
 
     private WebhookEvent sampleEvent;

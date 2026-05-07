@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../styles/dashboard.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Webhook, LogOut, RefreshCw, Server, Send, 
+import {
+  Webhook, LogOut, RefreshCw, Server, Send,
   AlertCircle, CheckCircle2, Search, Filter,
   LayoutDashboard, BarChart2, Copy, Terminal, Trash2,
   FolderPlus, Plus, Hash, X, Shield
@@ -123,7 +123,7 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
-    } catch (e) {}
+    } catch (e) { }
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
     navigate('/login');
@@ -169,9 +169,9 @@ const Dashboard = () => {
     e.preventDefault();
     if (!newChannelName.trim()) return;
     try {
-      const response = await api.post('/channels', { 
+      const response = await api.post('/channels', {
         name: newChannelName,
-        signingSecret: newChannelSecret 
+        signingSecret: newChannelSecret
       });
       setChannels([...channels, response.data]);
       setNewChannelName('');
@@ -215,7 +215,7 @@ const Dashboard = () => {
           </div>
         );
       }
-    } catch (e) {}
+    } catch (e) { }
     return <pre className="font-mono" style={{ fontSize: '0.7rem' }}>{headersStr}</pre>;
   };
 
@@ -264,25 +264,25 @@ const Dashboard = () => {
           <div className="sidebar-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <h3>Projects</h3>
-              <button 
-                className="add-project-toggle" 
+              <button
+                className="add-project-toggle"
                 onClick={() => setIsAddingChannel(!isAddingChannel)}
                 title="New Project"
               >
                 {isAddingChannel ? <X size={12} /> : <Plus size={12} />}
               </button>
             </div>
-            
+
             {isAddingChannel && (
               <form className="add-channel-form" onSubmit={handleCreateChannel}>
-                <input 
+                <input
                   autoFocus
-                  placeholder="Project name..." 
+                  placeholder="Project name..."
                   value={newChannelName}
                   onChange={e => setNewChannelName(e.target.value)}
                 />
-                <input 
-                  placeholder="Signing secret (optional)" 
+                <input
+                  placeholder="Signing secret (optional)"
                   value={newChannelSecret}
                   onChange={e => setNewChannelSecret(e.target.value)}
                   type="password"
@@ -293,15 +293,15 @@ const Dashboard = () => {
             )}
 
             <div className="channels-list">
-              <div 
+              <div
                 className={`channel-item ${selectedChannelId === 'ALL' ? 'active' : ''}`}
                 onClick={() => setSelectedChannelId('ALL')}
               >
-                <div className="channel-name"><Hash size={10} /> All Projects</div>
+                <div className="channel-name"> All Projects</div>
               </div>
               {channels.map(channel => (
-                <div 
-                  key={channel.id} 
+                <div
+                  key={channel.id}
                   className={`channel-item ${selectedChannelId === channel.id ? 'active' : ''}`}
                   onClick={() => setSelectedChannelId(channel.id)}
                 >
@@ -323,8 +323,8 @@ const Dashboard = () => {
               ) : (
                 <>
                   <code>{`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/webhook/${user?.id}/${activeChannel?.slug}/[path]`}</code>
-                  <button 
-                    className="copy-btn-mini" 
+                  <button
+                    className="copy-btn-mini"
                     onClick={() => {
                       const url = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/webhook/${user?.id}/${activeChannel?.slug}/default`;
                       navigator.clipboard.writeText(url);
