@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,18 +31,21 @@ public class WebhookController {
     private final UserRepository userRepository;
     private final com.webhookhub.backend.service.WebhookChannelService channelService;
 
-    @RequestMapping(value = "/webhook/{userId}/{channelSlug}/**", method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
-    public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, @PathVariable String channelSlug, HttpServletRequest request) throws IOException {
-        String fullPath = (String) request.getAttribute(org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+    @RequestMapping(value = "/webhook/{userId}/{channelSlug}/**", method = { RequestMethod.POST, RequestMethod.GET,
+            RequestMethod.PUT, RequestMethod.DELETE })
+    public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, @PathVariable String channelSlug,
+            HttpServletRequest request) throws IOException {
+        String fullPath = (String) request
+                .getAttribute(org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String prefix = "/webhook/" + userId + "/" + channelSlug;
         String endpointPath = fullPath.length() > prefix.length() ? fullPath.substring(prefix.length() + 1) : "default";
-        
+
         Long channelId = channelService.findByUserAndSlug(userId, channelSlug)
                 .map(com.webhookhub.backend.entity.WebhookChannel::getId)
                 .orElse(null);
 
         String method = request.getMethod();
-        
+
         Map<String, String> headersMap = new HashMap<>();
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -53,7 +55,8 @@ public class WebhookController {
 
         String payload = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 
-        WebhookEvent event = webhookService.processIncomingWebhook(userId, channelId, endpointPath, method, headersMap, payload);
+        WebhookEvent event = webhookService.processIncomingWebhook(userId, channelId, endpointPath, method, headersMap,
+                payload);
         return ResponseEntity.ok(event);
     }
 
@@ -65,7 +68,8 @@ public class WebhookController {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username).orElseThrow();
         log.debug("Fetching events for user: {} (page: {}, size: {})", username, page, size);
-        return ResponseEntity.ok(eventRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size)));
+        return ResponseEntity
+                .ok(eventRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size)));
     }
 
     @PostMapping("/api/events/{eventId}/replay")
@@ -83,7 +87,7 @@ public class WebhookController {
         webhookService.deleteEvent(eventId, user.getId());
         return ResponseEntity.ok("Event deleted");
     }
-    
+
     @PostMapping("/api/user/forward-url")
     public ResponseEntity<?> setForwardUrl(@RequestBody Map<String, String> payload, Authentication authentication) {
         String username = authentication.getName();
@@ -92,7 +96,7 @@ public class WebhookController {
         userService.saveUser(user);
         return ResponseEntity.ok("Forward URL updated");
     }
-    
+
     @GetMapping("/api/user/me")
     public ResponseEntity<User> getMe(Authentication authentication) {
         String username = authentication.getName();
