@@ -28,7 +28,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         // Apply Auth Rate Limiting (by IP)
         if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
-            String ip = request.getRemoteAddr();
+            String xff = request.getHeader("X-Forwarded-For");
+            String ip = (xff != null) ? xff.split(",")[0].trim() : request.getRemoteAddr();
             bucket = rateLimitingService.resolveAuthBucket(ip);
         }
         

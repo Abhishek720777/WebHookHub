@@ -7,11 +7,13 @@ const args = process.argv.slice(2);
 let userId = null;
 let projectSlug = 'default';
 let targetUrl = 'http://localhost:3000';
+let serverUrl = 'https://webhookhub-api.onrender.com/ws';
 
 for (let i = 0; i < args.length; i++) {
     if (args[i] === '--user') userId = args[i + 1];
     if (args[i] === '--project') projectSlug = args[i + 1];
     if (args[i] === '--to') targetUrl = args[i + 1];
+    if (args[i] === '--server') serverUrl = args[i + 1];
 }
 
 if (!userId) {
@@ -21,7 +23,7 @@ if (!userId) {
 }
 
 const client = new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+    webSocketFactory: () => new SockJS(serverUrl),
     onConnect: () => {
         console.log(`🚀 Connected! Watching for webhooks on: ${projectSlug}`);
         client.subscribe(`/topic/events/${userId}`, (message) => {
