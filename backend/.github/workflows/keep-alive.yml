@@ -1,0 +1,15 @@
+name: Keep WebHookHub Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Runs every 10 minutes
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend
+        run: |
+          curl -I https://webhookhub-api.onrender.com/actuator/health
+          echo "Server pinged successfully at $(date)"
