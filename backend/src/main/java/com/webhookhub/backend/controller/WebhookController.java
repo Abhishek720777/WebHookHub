@@ -69,8 +69,10 @@ public class WebhookController {
     }
 
     @PostMapping("/api/events/{eventId}/replay")
-    public ResponseEntity<WebhookEvent> replayEvent(@PathVariable Long eventId) {
-        WebhookEvent replayed = webhookService.replayEvent(eventId);
+    public ResponseEntity<WebhookEvent> replayEvent(@PathVariable Long eventId, Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username).orElseThrow();
+        WebhookEvent replayed = webhookService.replayEvent(eventId, user.getId());
         return ResponseEntity.ok(replayed);
     }
 

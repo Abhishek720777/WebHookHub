@@ -171,7 +171,7 @@ class WebhookServiceTest {
         when(eventRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(RuntimeException.class, () -> webhookService.replayEvent(999L));
+        assertThrows(RuntimeException.class, () -> webhookService.replayEvent(999L, 1L));
     }
 
     @Test
@@ -191,7 +191,7 @@ class WebhookServiceTest {
         when(eventRepository.save(any(WebhookEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
-        WebhookEvent result = webhookService.replayEvent(5L);
+        WebhookEvent result = webhookService.replayEvent(5L, 1L);
 
         // Assert — verify the STOMP topic was used
         verify(messagingTemplate).convertAndSend(

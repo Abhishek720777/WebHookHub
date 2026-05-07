@@ -16,7 +16,7 @@ class SignatureVerificationServiceTest {
         String secret = "my-secret";
         // Computed manually or via online tool for HMAC-SHA256
         // echo -n '{"hello":"world"}' | openssl dgst -sha256 -hmac "my-secret"
-        String signature = "4901f46f3456f5053748286a1005b637d6e615e06495634560b4594c92c556b1"; 
+        String signature = "a477339812d59f527176183f700b4f848b3e6e5bf3796ab25b6e0d0ccaeb96a4"; 
 
         boolean result = verificationService.verifyHmacSha256(payload, signature, secret);
         
@@ -28,7 +28,7 @@ class SignatureVerificationServiceTest {
     void shouldVerifySignatureWithPrefix() {
         String payload = "{\"hello\":\"world\"}";
         String secret = "my-secret";
-        String signature = "sha256=4901f46f3456f5053748286a1005b637d6e615e06495634560b4594c92c556b1"; 
+        String signature = "sha256=a477339812d59f527176183f700b4f848b3e6e5bf3796ab25b6e0d0ccaeb96a4"; 
 
         boolean result = verificationService.verifyHmacSha256(payload, signature, secret);
         

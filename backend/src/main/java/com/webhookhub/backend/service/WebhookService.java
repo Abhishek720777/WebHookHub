@@ -62,9 +62,13 @@ public class WebhookService {
         return executeForwarding(event, user.getForwardUrl());
     }
 
-    public WebhookEvent replayEvent(Long eventId) {
+    public WebhookEvent replayEvent(Long eventId, Long userId) {
         WebhookEvent original = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!original.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to replay this event");
+        }
 
         User user = userService.getUserById(original.getUserId());
         if (user == null) throw new RuntimeException("User not found");

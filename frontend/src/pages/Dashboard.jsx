@@ -13,6 +13,7 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import JsonViewer from '../components/JsonViewer';
 import AnalyticsView from '../components/AnalyticsView';
+import SetupGuide from '../components/SetupGuide';
 
 const Dashboard = () => {
   const [events, setEvents] = useState([]);
@@ -90,7 +91,8 @@ const Dashboard = () => {
       await fetchEvents();
 
       if (currentUser?.id) {
-        const socket = new SockJS('http://localhost:8080/ws', null, { withCredentials: true });
+        const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+        const socket = new SockJS(wsUrl, null, { withCredentials: true });
         stompClient = new Client({
           webSocketFactory: () => socket,
           reconnectDelay: 5000,
@@ -263,7 +265,7 @@ const Dashboard = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <h3>Projects</h3>
               <button 
-                className="add-channel-btn-mini" 
+                className="add-project-toggle" 
                 onClick={() => setIsAddingChannel(!isAddingChannel)}
                 title="New Project"
               >
@@ -320,11 +322,11 @@ const Dashboard = () => {
                 <span style={{ fontStyle: 'italic', opacity: 0.6 }}>Select a project to see URL</span>
               ) : (
                 <>
-                  <code>http://localhost:8080/webhook/{user?.id}/{activeChannel?.slug}/[path]</code>
+                  <code>{`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/webhook/${user?.id}/${activeChannel?.slug}/[path]`}</code>
                   <button 
                     className="copy-btn-mini" 
                     onClick={() => {
-                      const url = `http://localhost:8080/webhook/${user?.id}/${activeChannel?.slug}/default`;
+                      const url = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/webhook/${user?.id}/${activeChannel?.slug}/default`;
                       navigator.clipboard.writeText(url);
                     }}
                   >
@@ -340,7 +342,7 @@ const Dashboard = () => {
             <p className="hint">Auto-resend to local or remote server.</p>
             <input
               type="text"
-              placeholder="http://localhost:3000/api/webhook"
+              placeholder="https://your-app.com/api/webhook"
               value={forwardUrl}
               onChange={e => setForwardUrl(e.target.value)}
             />
@@ -359,7 +361,7 @@ const Dashboard = () => {
         <header className="main-header glass-panel">
           <h1>{activeTab === 'events' ? 'Events Log' : 'Analytics Dashboard'}</h1>
           <div className="header-actions">
-            <button className="refresh-btn" onClick={fetchEvents} disabled={loading}>
+            <button className="refresh-btn" onClick={() => fetchEvents(0)} disabled={loading}>
               <RefreshCw size={16} className={loading ? 'spinning' : ''} />
               {loading ? 'Refreshing...' : 'Refresh'}
             </button>
@@ -503,9 +505,7 @@ const Dashboard = () => {
                   </div>
                 </>
               ) : (
-                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '0.8rem' }}>
-                  Select an event to view full inspection data.
-                </div>
+                <SetupGuide userId={user?.id} projectSlug={activeChannel?.slug} />
               )}
             </div>
           </div>

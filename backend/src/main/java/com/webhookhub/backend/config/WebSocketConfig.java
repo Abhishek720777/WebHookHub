@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -25,6 +26,10 @@ import java.util.List;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtUtil jwtUtil;
+    private final com.webhookhub.backend.repository.UserRepository userRepository;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -35,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173", "http://localhost:5174")
+                .setAllowedOrigins(allowedOrigins.split(","))
                 .withSockJS();
     }
 
@@ -54,6 +59,24 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                             String username = jwtUtil.extractUsername(token);
                             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, null, List.of());
                             accessor.setUser(auth);
+                        }
+                    }
+                } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                    String destination = accessor.getDestination();
+                    if (destination != null && destination.startsWith("/topic/events/")) {
+                        String userIdStr = destination.substring("/topic/events/".length());
+                        try {
+                            Long requestedUserId = Long.parseLong(userIdStr);
+                            if (accessor.getUser() != null) {
+                                com.webhookhub.backend.entity.User user = userRepository.findByUsername(accessor.getUser().getName()).orElse(null);
+                                if (user == null || !user.getId().equals(requestedUserId)) {
+                                    throw new IllegalArgumentException("Unauthorized to subscribe to this topic");
+                                }
+                            } else {
+                                throw new IllegalArgumentException("Unauthenticated");
+                            }
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException("Invalid topic destination");
                         }
                     }
                 }

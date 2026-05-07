@@ -144,10 +144,23 @@ class WebhookControllerTest {
     @Test
     @DisplayName("POST /api/events/{id}/replay should return the replayed event")
     void shouldReplayEventWhenAuthenticated() throws Exception {
-        sampleEvent.setStatus("SUCCESS");
-        when(webhookService.replayEvent(1L)).thenReturn(sampleEvent);
+        com.webhookhub.backend.entity.User user = new com.webhookhub.backend.entity.User();
+        user.setId(1L);
+        user.setUsername("test_user");
+        when(userRepository.findByUsername(any())).thenReturn(java.util.Optional.of(user));
 
-        mockMvc.perform(post("/api/events/1/replay"))
+        sampleEvent.setStatus("SUCCESS");
+        when(webhookService.replayEvent(eq(1L), anyLong())).thenReturn(sampleEvent);
+
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken auth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "test_user", null, List.of()
+                );
+
+        mockMvc.perform(post("/api/events/1/replay").with(request -> {
+            request.setUserPrincipal(auth);
+            return request;
+        }))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("SUCCESS"));
