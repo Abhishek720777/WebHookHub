@@ -485,8 +485,17 @@ const Dashboard = () => {
 
                   <div className="detail-scroll custom-scrollbar">
                     {selectedEvent.errorMessage && (
-                      <div className="detail-section" style={{ background: 'rgba(231, 76, 60, 0.05)', padding: '1rem', borderRadius: '4px', border: '1px solid rgba(231, 76, 60, 0.2)', color: '#E74C3C', fontSize: '0.75rem' }}>
-                        <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>Processing Error</div>
+                      <div className="detail-section" style={{ 
+                        background: selectedEvent.status === 'FAILED' ? 'rgba(231, 76, 60, 0.05)' : 'rgba(52, 152, 219, 0.05)', 
+                        padding: '1rem', 
+                        borderRadius: '4px', 
+                        border: `1px solid ${selectedEvent.status === 'FAILED' ? 'rgba(231, 76, 60, 0.2)' : 'rgba(52, 152, 219, 0.2)'}`, 
+                        color: selectedEvent.status === 'FAILED' ? '#E74C3C' : '#3498DB', 
+                        fontSize: '0.75rem' 
+                      }}>
+                        <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>
+                          {selectedEvent.status === 'FAILED' ? 'Processing Error' : 'Delivery Info'}
+                        </div>
                         {selectedEvent.errorMessage}
                       </div>
                     )}
