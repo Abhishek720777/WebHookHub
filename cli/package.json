@@ -1,0 +1,19 @@
+{
+  "name": "webhookhub-cli",
+  "version": "1.0.0",
+  "description": "Command line tool for WebHookHub to tunnel cloud webhooks to localhost.",
+  "main": "bin/index.js",
+  "bin": {
+    "webhookhub": "bin/index.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
+    "axios": "^1.15.2",
+    "sockjs-client": "^1.6.1",
+    "commander": "^13.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
