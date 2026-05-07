@@ -41,7 +41,8 @@ public class WebhookService {
             channelRepository.findById(channelId).ifPresent(channel -> {
                 if (channel.getSigningSecret() != null) {
                     String signature = headers.getOrDefault("x-hub-signature-256", 
-                                       headers.getOrDefault("stripe-signature", null));
+                                       headers.getOrDefault("stripe-signature", 
+                                       headers.getOrDefault("x-razorpay-signature", null)));
                     if (signature != null) {
                         boolean verified = verificationService.verifyHmacSha256(payload, signature, channel.getSigningSecret());
                         event.setIsVerified(verified);
