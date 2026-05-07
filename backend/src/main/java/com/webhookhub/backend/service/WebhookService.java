@@ -23,6 +23,7 @@ public class WebhookService {
     private final SimpMessagingTemplate messagingTemplate;
     private final com.webhookhub.backend.repository.WebhookChannelRepository channelRepository;
     private final SignatureVerificationService verificationService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
 
     public WebhookEvent processIncomingWebhook(Long userId, Long channelId, String endpointPath, String method,
@@ -33,7 +34,13 @@ public class WebhookService {
         event.setChannelId(channelId);
         event.setEndpointPath(endpointPath);
         event.setMethod(method);
-        event.setHeaders(headers.toString());
+        
+        try {
+            event.setHeaders(objectMapper.writeValueAsString(headers));
+        } catch (Exception e) {
+            event.setHeaders("{}");
+        }
+
         event.setPayload(payload);
 
         // Signature Verification Logic
