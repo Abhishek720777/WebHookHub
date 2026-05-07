@@ -95,6 +95,7 @@ program
 
             client.subscribe(`/topic/events/${userId}`, (message) => {
                 const event = JSON.parse(message.body);
+                console.log(`[DEBUG] Received event: ${event.channelSlug || 'NO_SLUG'} / ${event.endpointPath}`);
 
                 if (event.channelSlug === project || event.endpointPath === project) {
                     console.log(`[${new Date().toLocaleTimeString()}] 📬 Event Received!`);
