@@ -10,14 +10,16 @@ program
   .description('Tunnel cloud webhooks from WebHookHub directly to your localhost.')
   .version('1.0.0')
   .requiredOption('-u, --user <id>', 'Your WebHookHub User ID')
+  .option('-a, --auth <token>', 'Your JWT Auth Token')
   .option('-p, --project <slug>', 'The project slug (e.g., github-dev)', 'default')
   .option('-t, --to <url>', 'Local target URL', 'http://localhost:3000')
   .option('-s, --server <url>', 'WebHookHub WS URL', 'https://webhookhub-api.onrender.com/ws')
   .action((options) => {
-    const { user, project, to, server } = options;
+    const { user, auth, project, to, server } = options;
 
     const client = new Client({
         webSocketFactory: () => new SockJS(server),
+        connectHeaders: auth ? { 'Authorization': `Bearer ${auth}` } : {},
         onConnect: () => {
             console.log('\n----------------------------------------');
             console.log('🚀 WebHookHub CLI Active');

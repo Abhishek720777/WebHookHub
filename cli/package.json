@@ -1,6 +1,6 @@
 {
   "name": "webhookhub-tool-abhi777",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Command line tool for WebHookHub to tunnel cloud webhooks to localhost.",
   "main": "bin/index.js",
   "bin": {
