@@ -97,6 +97,12 @@ public class WebhookService {
     }
 
     private WebhookEvent executeForwarding(WebhookEvent event, String forwardUrl) {
+        if (event.getChannelId() != null) {
+            channelRepository.findById(event.getChannelId()).ifPresent(channel -> {
+                event.setChannelSlug(channel.getSlug());
+            });
+        }
+
         if (forwardUrl == null || forwardUrl.isEmpty()) {
             event.setStatus("SUCCESS");
             event.setErrorMessage("No forward URL configured. Logged successfully.");
