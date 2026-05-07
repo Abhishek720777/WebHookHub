@@ -67,6 +67,7 @@ public class WebhookController {
         try {
             WebhookEvent event = webhookService.processIncomingWebhook(userId, channelId, endpointPath, method, headersMap,
                     payload);
+            event.setChannelSlug(channelSlug); // Set the slug for the CLI to match
             log.info("✅ Webhook Processed Successfully. EventID={}", event.getId());
             return ResponseEntity.ok(event);
         } catch (Exception e) {

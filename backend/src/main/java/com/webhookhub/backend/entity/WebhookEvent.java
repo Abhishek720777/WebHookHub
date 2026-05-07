@@ -20,6 +20,9 @@ public class WebhookEvent {
     @Column(name = "channel_id")
     private Long channelId;
 
+    @Transient
+    private String channelSlug;
+
     @Column(name = "endpoint_path")
     private String endpointPath;
 
