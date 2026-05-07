@@ -35,14 +35,22 @@ public class WebhookController {
             RequestMethod.PUT, RequestMethod.DELETE })
     public ResponseEntity<?> receiveWebhook(@PathVariable Long userId, @PathVariable String channelSlug,
             HttpServletRequest request) throws IOException {
+        log.info("📥 Incoming Webhook: UserID={}, Project={}", userId, channelSlug);
+        
         String fullPath = (String) request
                 .getAttribute(org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String prefix = "/webhook/" + userId + "/" + channelSlug;
         String endpointPath = fullPath.length() > prefix.length() ? fullPath.substring(prefix.length() + 1) : "default";
 
+        log.debug("🎯 Target Path: {}", endpointPath);
+
         Long channelId = channelService.findByUserAndSlug(userId, channelSlug)
                 .map(com.webhookhub.backend.entity.WebhookChannel::getId)
                 .orElse(null);
+
+        if (channelId == null) {
+            log.warn("⚠️ Warning: Project Slug '{}' not found for User ID {}", channelSlug, userId);
+        }
 
         String method = request.getMethod();
 
@@ -54,10 +62,17 @@ public class WebhookController {
         }
 
         String payload = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        log.debug("📦 Payload Size: {} chars", payload.length());
 
-        WebhookEvent event = webhookService.processIncomingWebhook(userId, channelId, endpointPath, method, headersMap,
-                payload);
-        return ResponseEntity.ok(event);
+        try {
+            WebhookEvent event = webhookService.processIncomingWebhook(userId, channelId, endpointPath, method, headersMap,
+                    payload);
+            log.info("✅ Webhook Processed Successfully. EventID={}", event.getId());
+            return ResponseEntity.ok(event);
+        } catch (Exception e) {
+            log.error("❌ Critical Error Processing Webhook: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Internal Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/api/events")
