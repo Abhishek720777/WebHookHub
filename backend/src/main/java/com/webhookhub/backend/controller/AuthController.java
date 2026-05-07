@@ -61,10 +61,10 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
 
         return ResponseEntity.ok()
@@ -76,20 +76,19 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtUtil.generateToken(userDetails);
-            
+
             User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
 
             ResponseCookie cookie = ResponseCookie.from("jwt", token)
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(true)
                     .path("/")
                     .maxAge(7 * 24 * 60 * 60)
-                    .sameSite("Lax")
+                    .sameSite("None")
                     .build();
 
             return ResponseEntity.ok()
@@ -104,10 +103,10 @@ public class AuthController {
     public ResponseEntity<?> logout() {
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -118,9 +117,8 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@RequestBody AuthRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElse(null);
-        
+
         if (user == null) {
-            // Don't reveal if email exists or not for security
             return ResponseEntity.ok("If the email exists, an OTP has been sent.");
         }
 
