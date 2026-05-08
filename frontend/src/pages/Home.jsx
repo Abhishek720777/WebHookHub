@@ -698,6 +698,7 @@ export default function Home() {
                         </div>
                         <div className="feat-ghost">!</div>
                     </div>
+                </div>
             </section>
 
             {/* ── HOW TO USE GUIDE ─────────────────────────── */}
