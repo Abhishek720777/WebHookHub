@@ -59,7 +59,7 @@ body {
 
 /* ── HERO ───────────────────────────────────────── */
 .hero {
-  min-height: 100vh; padding: 9rem 3rem 5rem;
+  min-height: 100vh; padding: 6.5rem 3rem 4rem;
   position: relative; overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -291,7 +291,7 @@ body {
 .step-p { font-size:0.78rem; line-height:1.65; color:var(--muted); }
 
 /* ── FEATURES ────────────────────────────────────── */
-.features { padding: 8rem 3rem; background: var(--cream); }
+.features { padding: 6rem 3rem 4rem; background: var(--cream); }
 .feat-grid {
   display: grid;
   grid-template-columns: repeat(3,1fr);
@@ -466,7 +466,7 @@ body {
 }
 
 /* ── GUIDE SECTION ──────────────────────────────── */
-.guide-section { padding: 9rem 3rem; background: var(--cream); }
+.guide-section { padding: 4rem 3rem 9rem; background: var(--cream); }
 .guide-sub { color: var(--muted); font-size: 0.88rem; margin-top: 1.5rem; max-width: 32rem; }
 
 .guide-grid {
