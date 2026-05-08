@@ -62,7 +62,8 @@ const Login = () => {
       setShowForgot(false);
       setOtpSent(false);
     } catch (err) {
-      setError(err.response?.data || 'Reset failed.');
+      const msg = err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : 'Reset failed.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

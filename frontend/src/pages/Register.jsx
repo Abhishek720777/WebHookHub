@@ -34,7 +34,8 @@ const Register = () => {
       localStorage.setItem('userId', res.data.userId);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data || 'Registration failed. Please try again.');
+      const msg = err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : 'Registration failed. Please try again.');
+      setError(msg);
     } finally {
       setLoading(false);
     }
