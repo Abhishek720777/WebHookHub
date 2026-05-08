@@ -3,13 +3,15 @@ import { Terminal, Copy, Check, ExternalLink, Cpu, Globe, Zap } from 'lucide-rea
 
 const SetupGuide = ({ userId, projectSlug }) => {
   const [copied, setCopied] = useState(false);
-  const cliCommand = `npx wh-hub listen --user ${userId} --project ${projectSlug || 'default'}`;
+  const cliCommand = `webhookhub -p ${projectSlug || 'default'} -t http://localhost:3000/api/webhook`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(cliCommand);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
   return (
     <div className="setup-guide fade-in">
@@ -26,7 +28,7 @@ const SetupGuide = ({ userId, projectSlug }) => {
             <h3>Configure Your Webhook Provider</h3>
             <p>Set your Payload URL in Stripe, GitHub, or Shopify to:</p>
             <div className="url-box command-box">
-              <code>{`${window.location.origin.replace('5173', '8080').replace('5174', '8080').replace('5175', '8080')}/webhook/${userId}/${projectSlug || 'default'}`}</code>
+              <code>{`${baseUrl}/webhook/${userId}/${projectSlug || 'default'}/default`}</code>
             </div>
           </div>
         </div>
@@ -34,7 +36,7 @@ const SetupGuide = ({ userId, projectSlug }) => {
         <div className="guide-step">
           <div className="step-number">02</div>
           <div className="step-content">
-            <h3>Start the Proxy</h3>
+            <h3>Start the Tunnel</h3>
             <p>Run this command in your terminal to begin receiving events locally.</p>
             <div className="command-box">
               <code>{cliCommand}</code>
