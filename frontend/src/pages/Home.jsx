@@ -733,6 +733,10 @@ export default function Home() {
                                 <span className="step-num">3</span>
                                 <p><strong>Inspect Live:</strong> Watch events land on your dashboard in real-time with full headers and payloads.</p>
                             </li>
+                            <li>
+                                <span className="step-num">4</span>
+                                <p><strong>One-Click Replay:</strong> Found a bug? Click "Replay" to resend the exact same payload whenever you're ready.</p>
+                            </li>
                         </ul>
                         <div className="guide-visual">
                             <div className="mock-dash-mini">
@@ -760,11 +764,15 @@ export default function Home() {
                             </li>
                             <li>
                                 <span className="step-num">2</span>
-                                <p><strong>Set Local Target:</strong> In your WebHookHub dashboard, set your local server's URL (e.g., <code>http://localhost:3000/api/webhook</code>) as the forwarding target.</p>
+                                <p><strong>Set Local Target:</strong> In your dashboard, set your local server's URL as the forwarding target.</p>
                             </li>
                             <li>
                                 <span className="step-num">3</span>
-                                <p><strong>Fire the Tunnel:</strong> Run the tunnel command in your terminal. We'll start bridging cloud events directly to your local backend instantly.</p>
+                                <p><strong>Fire the Tunnel:</strong> Run the tunnel command to bridge cloud events directly to your local backend.</p>
+                            </li>
+                            <li>
+                                <span className="step-num">4</span>
+                                <p><strong>Debug with Replay:</strong> Re-trigger local logic repeatedly using the dashboard Replay button without new cloud events.</p>
                             </li>
                         </ul>
                         <div className="guide-terminal">
