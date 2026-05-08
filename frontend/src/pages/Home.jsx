@@ -698,6 +698,86 @@ export default function Home() {
                         </div>
                         <div className="feat-ghost">!</div>
                     </div>
+            </section>
+
+            {/* ── HOW TO USE GUIDE ─────────────────────────── */}
+            <section className="guide-section reveal" id="guide">
+                <div className="s-label">Onboarding</div>
+                <h2 className="s-title">Choose your <em>Workflow</em></h2>
+                <p className="guide-sub">WebHookHub adapts to how you work. Whether you're debugging a payload or building a local integration.</p>
+
+                <div className="guide-grid">
+                    {/* Path 1: The Inspector */}
+                    <div className="guide-card">
+                        <div className="guide-card-header">
+                            <div className="guide-icon-box blue">
+                                <Search size={20} />
+                            </div>
+                            <div>
+                                <h3>The Inspector</h3>
+                                <p>Simple capture & debugging</p>
+                            </div>
+                        </div>
+                        <ul className="guide-steps">
+                            <li>
+                                <span className="step-num">1</span>
+                                <p><strong>Create a Project:</strong> Name your project and get your unique endpoint URL instantly.</p>
+                            </li>
+                            <li>
+                                <span className="step-num">2</span>
+                                <p><strong>Connect Provider:</strong> Paste the URL into GitHub, Stripe, or Razorpay's webhook settings.</p>
+                            </li>
+                            <li>
+                                <span className="step-num">3</span>
+                                <p><strong>Inspect Live:</strong> Watch events land on your dashboard in real-time with full headers and payloads.</p>
+                            </li>
+                        </ul>
+                        <div className="guide-visual">
+                            <div className="mock-dash-mini">
+                                <div className="mock-row success"><span>POST</span> /payment.success</div>
+                                <div className="mock-row fail"><span>POST</span> /order.failed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Path 2: The Developer */}
+                    <div className="guide-card">
+                        <div className="guide-card-header">
+                            <div className="guide-icon-box rust">
+                                <Terminal size={20} />
+                            </div>
+                            <div>
+                                <h3>The Developer</h3>
+                                <p>Local tunneling & automation</p>
+                            </div>
+                        </div>
+                        <ul className="guide-steps">
+                            <li>
+                                <span className="step-num">1</span>
+                                <p><strong>Install the CLI:</strong> Download our official tool via NPM for global terminal access.</p>
+                            </li>
+                            <li>
+                                <span className="step-num">2</span>
+                                <p><strong>Authenticate:</strong> Run <code>webhookhub login</code> to link your machine securely.</p>
+                            </li>
+                            <li>
+                                <span className="step-num">3</span>
+                                <p><strong>Start Tunnel:</strong> Forward cloud events to your localhost with a single command.</p>
+                            </li>
+                        </ul>
+                        <div className="guide-terminal">
+                            <div className="term-header">
+                                <div className="term-dots"><span></span><span></span><span></span></div>
+                                <span>zsh — 80×24</span>
+                            </div>
+                            <div className="term-body">
+                                <div className="term-line"><span className="prompt">$</span> npm install -g webhookhub-tool-abhi777</div>
+                                <div className="term-line"><span className="prompt">$</span> webhookhub login</div>
+                                <div className="term-line"><span className="prompt">$</span> webhookhub -p my-project -t http://localhost:3000</div>
+                                <div className="term-line success">🚀 Tunnel Active: Forwarding to localhost...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
