@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { Search, Terminal } from 'lucide-react';
 import '../styles/home.css';
 
 function WebhookFlowViz({ scrollY }) {
