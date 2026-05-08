@@ -756,15 +756,15 @@ export default function Home() {
                         <ul className="guide-steps">
                             <li>
                                 <span className="step-num">1</span>
-                                <p><strong>Install the CLI:</strong> Download our official tool via NPM for global terminal access.</p>
+                                <p><strong>Install & Auth:</strong> Install our tool globally via <code>npm</code> and run <code>webhookhub login</code> to link your account.</p>
                             </li>
                             <li>
                                 <span className="step-num">2</span>
-                                <p><strong>Authenticate:</strong> Run <code>webhookhub login</code> to link your machine securely.</p>
+                                <p><strong>Set Local Target:</strong> In your WebHookHub dashboard, set your local server's URL (e.g., <code>http://localhost:3000/api/webhook</code>) as the forwarding target.</p>
                             </li>
                             <li>
                                 <span className="step-num">3</span>
-                                <p><strong>Start Tunnel:</strong> Forward cloud events to your localhost with a single command.</p>
+                                <p><strong>Fire the Tunnel:</strong> Run the tunnel command in your terminal. We'll start bridging cloud events directly to your local backend instantly.</p>
                             </li>
                         </ul>
                         <div className="guide-terminal">
