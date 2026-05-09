@@ -994,3 +994,43 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+.guide-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--white);
+  padding: 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.guide-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.guide-tab:hover {
+  color: var(--ink);
+}
+
+.guide-tab.active {
+  background: var(--ink);
+  color: var(--cream);
+  box-shadow: 0 4px 12px rgba(26, 18, 11, 0.15);
+}
