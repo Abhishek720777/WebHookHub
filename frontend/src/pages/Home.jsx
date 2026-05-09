@@ -331,7 +331,7 @@ export default function Home() {
     const [featIn, setFeatIn] = useState(false);
 
     const handleAuthAction = () => {
-        if (localStorage.getItem('token')) {
+        if (localStorage.getItem('userId')) {
             navigate('/dashboard');
         } else {
             navigate('/login');
